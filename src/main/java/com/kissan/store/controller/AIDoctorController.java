@@ -4,7 +4,12 @@ import com.kissan.store.model.AIScanLog;
 import com.kissan.store.service.AIDoctorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.Map;
 
@@ -20,7 +25,7 @@ public class AIDoctorController {
     public ResponseEntity<AIDoctorService.DiagnosisResult> diagnose(@RequestBody Map<String, String> body) {
         String crop = body.get("crop");
         String symptoms = body.get("symptoms");
-        return ResponseEntity.ok(aiDoctorService.diagnoseCrop(crop, symptoms));
+        return ResponseEntity.ok(aiDoctorService.diagnose(crop, symptoms));
     }
 
     @GetMapping("/scans")

@@ -30,6 +30,10 @@ public class InvoiceService {
         return invoiceRepository.findById(id);
     }
 
+    public List<Invoice> getInvoicesByFarmerId(String farmerId) {
+        return invoiceRepository.findByFarmerIdOrderByDateDesc(farmerId);
+    }
+
     @Transactional
     public Invoice createInvoice(Invoice invoice) {
         if (invoice.getId() == null || invoice.getId().trim().isEmpty()) {

@@ -4,7 +4,13 @@ import com.kissan.store.model.Invoice;
 import com.kissan.store.service.InvoiceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
@@ -27,14 +33,13 @@ public class InvoiceController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/farmer/{farmerId}")
+    public ResponseEntity<List<Invoice>> getInvoicesByFarmerId(@PathVariable String farmerId) {
+        return ResponseEntity.ok(invoiceService.getInvoicesByFarmerId(farmerId));
+    }
+
     @PostMapping
     public ResponseEntity<Invoice> createInvoice(@RequestBody Invoice invoice) {
         return ResponseEntity.ok(invoiceService.createInvoice(invoice));
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteInvoice(@PathVariable String id) {
-        invoiceService.deleteInvoice(id);
-        return ResponseEntity.noContent().build();
     }
 }

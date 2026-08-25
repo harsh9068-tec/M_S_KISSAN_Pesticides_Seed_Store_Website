@@ -1,6 +1,8 @@
 package com.kissan.store.model;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "ai_scan_logs")

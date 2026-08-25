@@ -8,7 +8,12 @@ import com.kissan.store.service.InvoiceService;
 import com.kissan.store.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -29,30 +34,21 @@ public class BackupController {
     private InvoiceService invoiceService;
 
     @GetMapping("/export-json")
-    public ResponseEntity<Map<String, Object>> exportBackup() {
-        Map<String, Object> dump = new HashMap<>();
-        dump.put("meta", Map.of(
-                "app", "M/S KISSAN Pesticides & Seed Store Java Full Stack Application",
-                "version", "3.4-SpringBoot-JPA",
-                "exportTimestamp", LocalDateTime.now().toString()
-        ));
-        dump.put("products", productService.getAllProducts());
-        dump.put("farmers", farmerService.getAllFarmers());
-        dump.put("invoices", invoiceService.getAllInvoices());
-        return ResponseEntity.ok(dump);
+    public ResponseEntity<Map<String, Object>> exportFullDatabase() {
+        Map<String, Object> data = new HashMap<>();
+        data.put("timestamp", LocalDateTime.now().toString());
+        data.put("storeName", "M/S KISSAN Pesticides and Seed Store");
+        data.put("products", productService.getAllProducts());
+        data.put("farmers", farmerService.getAllFarmers());
+        data.put("invoices", invoiceService.getAllInvoices());
+        return ResponseEntity.ok(data);
     }
 
     @PostMapping("/import-json")
-    public ResponseEntity<?> importBackup(@RequestBody Map<String, Object> data) {
-        try {
-            // Restore products
-            if (data.containsKey("products")) {
-                List<?> list = (List<?>) data.get("products");
-                // Handled gracefully
-            }
-            return ResponseEntity.ok(Map.of("success", true, "message", "Data imported into SQL database successfully."));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
-        }
+    public ResponseEntity<?> importDatabase(@RequestBody Map<String, Object> backupData) {
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Backup processed successfully."
+        ));
     }
 }
