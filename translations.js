@@ -2,7 +2,7 @@
 
 const TRANSLATIONS = {
   en: {
-    // Navigation
+    // Navigation & Settings
     nav_home: "Home",
     nav_about: "About",
     nav_products: "Products",
@@ -10,8 +10,16 @@ const TRANSLATIONS = {
     nav_gallery: "Gallery",
     nav_contact: "Contact",
     nav_farmer_portal: "🌾 Farmer Portal",
+    nav_distributors: "🤝 Authorized Brands",
+    nav_ai_doctor: "🤖 AI Doctor",
     nav_whatsapp: "WhatsApp",
     brand_sub: "Pesticides & Seed Store",
+    settings_title: "Store Settings",
+    settings_sub: "Customize language, theme & portal shortcuts",
+    theme_heading: "Display Theme",
+    theme_sub: "Select Bright (Light) or Dark Mode",
+    lang_heading: "Language / भाषा",
+    lang_sub: "Choose English or हिंदी (Hindi)",
 
     // Hero Section
     hero_eyebrow: "🌾 Serving farmers for 21+ years",
@@ -199,7 +207,7 @@ const TRANSLATIONS = {
   },
 
   hi: {
-    // Navigation
+    // Navigation & Settings
     nav_home: "होम (Home)",
     nav_about: "हमारे बारे में",
     nav_products: "उत्पाद एवं दवाइयां",
@@ -207,8 +215,16 @@ const TRANSLATIONS = {
     nav_gallery: "गैलरी",
     nav_contact: "संपर्क करें",
     nav_farmer_portal: "🌾 किसान पोर्टल",
+    nav_distributors: "🤝 अधिकृत ब्रांड्स",
+    nav_ai_doctor: "🤖 AI डॉक्टर",
     nav_whatsapp: "व्हाट्सएप",
     brand_sub: "कीटनाशक एवं उत्तम बीज भंडार",
+    settings_title: "सेटिंग्स (Settings)",
+    settings_sub: "भाषा, थीम एवं त्वरित पोर्टल विकल्प",
+    theme_heading: "डिस्प्ले थीम (Theme)",
+    theme_sub: "उज्ज्वल (लाइट) या डार्क मोड चुनें",
+    lang_heading: "भाषा चयन (Language)",
+    lang_sub: "अंग्रेजी (English) या हिंदी चुनें",
 
     // Hero Section
     hero_eyebrow: "🌾 21+ वर्षों से किसानों का अटूट विश्वास",

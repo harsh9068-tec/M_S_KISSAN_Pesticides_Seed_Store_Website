@@ -81,7 +81,19 @@ document.addEventListener('DOMContentLoaded', () => {
     if (currentAiDiagnosis) {
       displayAiDiagnosis(currentAiDiagnosis);
     }
+    // Expose globally and update settings buttons
+    window.applyStoreLanguage = applyLanguage;
+    if (window.ThemeManager && typeof window.ThemeManager.updateLangButtons === 'function') {
+      window.ThemeManager.updateLangButtons(lang);
+    }
   }
+
+  window.applyStoreLanguage = applyLanguage;
+  window.addEventListener('kissan-language-change', (e) => {
+    if (e.detail && e.detail.lang) {
+      applyLanguage(e.detail.lang);
+    }
+  });
 
   // Toggle Language Click
   langToggleBtn?.addEventListener('click', () => {

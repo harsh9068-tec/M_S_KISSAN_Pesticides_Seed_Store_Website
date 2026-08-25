@@ -93,18 +93,85 @@
         </div>
 
         <div class="header-actions">
-          <button type="button" class="theme-toggle-btn" title="Toggle Dark / Bright Theme" aria-label="Toggle Theme">
-            <span class="theme-icon">🌙</span>
-            <span class="theme-label">Dark</span>
+          <button type="button" id="settingsBtn" class="btn-settings-pill" aria-label="Settings" title="Store Settings & Theme">
+            <span class="settings-icon">⚙️</span>
+            <span class="settings-label">Settings</span>
           </button>
           <a href="farmer-portal.html" class="btn btn-outline" target="_blank" title="Open Farmer Passbook Portal">👨‍🌾 Farmer Portal</a>
-          <a href="distributors.html" class="btn btn-outline" target="_blank" title="View Distributor Page">🤝 Brands</a>
           <a href="index.html" class="btn btn-outline" target="_blank" title="Preview live website">🌐 Live Store</a>
           <button id="changePinBtn" class="btn btn-outline">🔑 Change PIN</button>
           <button id="logoutBtn" class="btn btn-danger">🔒 Logout</button>
         </div>
       </div>
     </header>
+
+    <!-- STORE SETTINGS MODAL (Theme & Shortcuts) -->
+    <div id="settingsModal" class="settings-modal hidden" role="dialog" aria-modal="true" aria-labelledby="settingsHeading">
+      <div class="settings-modal-backdrop" id="closeSettingsBackdrop"></div>
+      <div class="settings-card">
+        <div class="settings-card-header">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span style="font-size:22px;">⚙️</span>
+            <div>
+              <h3 id="settingsHeading">Store & Admin Settings</h3>
+              <small>Customize display theme & portal links</small>
+            </div>
+          </div>
+          <button type="button" id="closeSettingsBtn" class="settings-close-btn" aria-label="Close settings">✕</button>
+        </div>
+
+        <div class="settings-card-body">
+          <!-- 1. Display Theme -->
+          <div class="setting-group-box">
+            <div class="setting-header-row">
+              <span class="setting-icon">🌓</span>
+              <div style="flex:1;">
+                <strong>Display Theme</strong>
+                <small>Select Bright (Light) or Dark Mode</small>
+              </div>
+            </div>
+            <div class="segmented-control">
+              <button type="button" class="segmented-btn" data-set-theme="light">
+                <span>☀️</span> Bright
+              </button>
+              <button type="button" class="segmented-btn" data-set-theme="dark">
+                <span>🌙</span> Dark
+              </button>
+            </div>
+          </div>
+
+          <!-- 2. Shortcuts / Authorized Brands & Portals -->
+          <div class="setting-links-list">
+            <a href="distributors.html" class="setting-nav-card" target="_blank">
+              <span class="setting-nav-icon">🤝</span>
+              <div class="setting-nav-info">
+                <strong>Authorized Brands & Partners</strong>
+                <small>Syngenta, DuPont, Coromandel, FMC & more</small>
+              </div>
+              <span class="setting-nav-arrow">→</span>
+            </a>
+
+            <a href="farmer-portal.html" class="setting-nav-card" target="_blank">
+              <span class="setting-nav-icon">🌾</span>
+              <div class="setting-nav-info">
+                <strong>Farmer Khata & Passbook Portal</strong>
+                <small>Customer passbooks & ledger records</small>
+              </div>
+              <span class="setting-nav-arrow">→</span>
+            </a>
+
+            <a href="index.html" class="setting-nav-card" target="_blank">
+              <span class="setting-nav-icon">🏪</span>
+              <div class="setting-nav-info">
+                <strong>Live Main Storefront</strong>
+                <small>Public website and AI crop doctor</small>
+              </div>
+              <span class="setting-nav-arrow">→</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Main Content -->
     <main class="admin-container main-content">

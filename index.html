@@ -20,46 +20,125 @@
     <div class="container nav-wrap">
       <a class="brand" href="#home" aria-label="M/S KISSAN home">
         <span class="brand-mark">K</span>
-        <span>
+        <span class="brand-text">
           <strong>M/S KISSAN</strong>
           <small data-i18n="brand_sub">Pesticides & Seed Store</small>
         </span>
       </a>
 
-      <!-- Language & Theme Switchers -->
-      <div style="display:flex; align-items:center; gap:8px;">
-        <div class="lang-switch-wrap">
-          <button id="langToggleBtn" class="lang-toggle-btn" aria-label="Switch Language (Hindi / English)">
-            <span class="lang-flag">🇮🇳</span>
-            <span id="langBtnLabel">हिंदी में देखें</span>
-          </button>
-        </div>
-
-        <div class="theme-switch-wrap">
-          <button type="button" class="theme-toggle-btn" title="Toggle Dark / Bright Theme" aria-label="Toggle Theme">
-            <span class="theme-icon">🌙</span>
-            <span class="theme-label">Dark</span>
-          </button>
-        </div>
-      </div>
-
-      <button class="menu-toggle" aria-label="Open menu" aria-expanded="false">☰</button>
+      <!-- Main Navigation -->
       <nav class="nav" aria-label="Main navigation">
         <a href="#home" data-i18n="nav_home">Home</a>
         <a href="#about" data-i18n="nav_about">About</a>
         <a href="#products" data-i18n="nav_products">Products</a>
-        <a href="distributors.html" class="portal-nav-link" data-i18n="nav_distributors">🤝 Authorized Brands</a>
-        <a href="#ai-doctor" class="portal-nav-link" data-i18n="nav_ai_doctor" style="background:#0b5d32; color:#fff; padding:6px 12px; border-radius:8px;">🤖 AI Crop Doctor</a>
-        <a href="#services" data-i18n="nav_services">Services</a>
-        <a href="#gallery" data-i18n="nav_gallery">Gallery</a>
+        <a href="#ai-doctor" class="nav-highlight-link" data-i18n="nav_ai_doctor">🤖 AI Doctor</a>
+        <a href="farmer-portal.html" class="nav-highlight-link" data-i18n="nav_farmer_portal">🌾 Farmer Portal</a>
         <a href="#contact" data-i18n="nav_contact">Contact</a>
-        <a href="farmer-portal.html" class="portal-nav-link" data-i18n="nav_farmer_portal">🌾 Farmer Portal</a>
       </nav>
-      <a class="nav-whatsapp"
-        href="https://wa.me/919760153116?text=Hello%20M%2FS%20KISSAN%20Pesticides%20and%20Seed%20Store%2C%20I%20want%20to%20enquire%20about%20a%20product."
-        target="_blank" rel="noopener" data-i18n="nav_whatsapp">WhatsApp</a>
+
+      <!-- Right Action Controls -->
+      <div class="header-actions">
+        <!-- Settings Button (Theme, Language, Brands & Links) -->
+        <button type="button" id="settingsBtn" class="btn-settings-pill" aria-label="Settings" title="Store Settings, Theme & Language">
+          <span class="settings-icon">⚙️</span>
+          <span class="settings-label" data-i18n="settings_title">Settings</span>
+        </button>
+
+        <a class="nav-whatsapp"
+          href="https://wa.me/919760153116?text=Hello%20M%2FS%20KISSAN%20Pesticides%20and%20Seed%20Store%2C%20I%20want%20to%20enquire%20about%20a%20product."
+          target="_blank" rel="noopener" data-i18n="nav_whatsapp">💬 WhatsApp</a>
+
+        <button class="menu-toggle" aria-label="Open menu" aria-expanded="false">☰</button>
+      </div>
     </div>
   </header>
+
+  <!-- STORE SETTINGS MODAL (Theme, Language, Authorized Brands, Admin Login) -->
+  <div id="settingsModal" class="settings-modal hidden" role="dialog" aria-modal="true" aria-labelledby="settingsHeading">
+    <div class="settings-modal-backdrop" id="closeSettingsBackdrop"></div>
+    <div class="settings-card">
+      <div class="settings-card-header">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="font-size:22px;">⚙️</span>
+          <div>
+            <h3 id="settingsHeading" data-i18n="settings_title">Store Settings</h3>
+            <small data-i18n="settings_sub">Customize language, theme & portal shortcuts</small>
+          </div>
+        </div>
+        <button type="button" id="closeSettingsBtn" class="settings-close-btn" aria-label="Close settings">✕</button>
+      </div>
+
+      <div class="settings-card-body">
+        <!-- 1. Display Theme -->
+        <div class="setting-group-box">
+          <div class="setting-header-row">
+            <span class="setting-icon">🌓</span>
+            <div style="flex:1;">
+              <strong data-i18n="theme_heading">Display Theme</strong>
+              <small data-i18n="theme_sub">Select Bright (Light) or Dark Mode</small>
+            </div>
+          </div>
+          <div class="segmented-control">
+            <button type="button" class="segmented-btn" data-set-theme="light">
+              <span>☀️</span> Bright
+            </button>
+            <button type="button" class="segmented-btn" data-set-theme="dark">
+              <span>🌙</span> Dark
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. Language Switcher -->
+        <div class="setting-group-box">
+          <div class="setting-header-row">
+            <span class="setting-icon">🌐</span>
+            <div style="flex:1;">
+              <strong data-i18n="lang_heading">Language (भाषा)</strong>
+              <small data-i18n="lang_sub">Choose English or हिंदी (Hindi)</small>
+            </div>
+          </div>
+          <div class="segmented-control">
+            <button type="button" class="segmented-btn" data-set-lang="en">
+              <span>🇬🇧</span> English
+            </button>
+            <button type="button" class="segmented-btn" data-set-lang="hi">
+              <span>🇮🇳</span> हिंदी
+            </button>
+          </div>
+        </div>
+
+        <!-- 3. Shortcuts / Authorized Brands & Portals -->
+        <div class="setting-links-list">
+          <a href="distributors.html" class="setting-nav-card">
+            <span class="setting-nav-icon">🤝</span>
+            <div class="setting-nav-info">
+              <strong data-i18n="nav_distributors">Authorized Brands & Partners</strong>
+              <small>Syngenta, DuPont, Coromandel, FMC & more</small>
+            </div>
+            <span class="setting-nav-arrow">→</span>
+          </a>
+
+          <a href="farmer-portal.html" class="setting-nav-card">
+            <span class="setting-nav-icon">🌾</span>
+            <div class="setting-nav-info">
+              <strong data-i18n="nav_farmer_portal">Farmer Khata & Passbook Portal</strong>
+              <small>View digital ledger, purchases & instant OTP login</small>
+            </div>
+            <span class="setting-nav-arrow">→</span>
+          </a>
+
+          <a href="admin.html" class="setting-nav-card">
+            <span class="setting-nav-icon">🔑</span>
+            <div class="setting-nav-info">
+              <strong data-i18n="footer_admin_link">Store Owner & Staff Portal</strong>
+              <small>POS Billing, Inventory & Analytics Dashboard</small>
+            </div>
+            <span class="setting-nav-arrow">→</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <main>
     <section class="hero" id="home">
