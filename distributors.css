@@ -1,0 +1,290 @@
+/* Authorized Distributors & Brand Partners Stylesheet */
+
+.active-nav-link {
+  color: var(--green) !important;
+  font-weight: 800 !important;
+  border-bottom: 2px solid var(--green);
+}
+
+/* Distributor Hero */
+.dist-hero {
+  background: linear-gradient(135deg, #093f23 0%, #0d542e 60%, #156d3d 100%);
+  color: #fff;
+  padding: 65px 0 50px;
+  position: relative;
+  overflow: hidden;
+}
+
+.dist-hero::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(154, 203, 60, 0.15), transparent 70%);
+  pointer-events: none;
+}
+
+.dist-hero-badge {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  margin-bottom: 16px;
+  backdrop-filter: blur(4px);
+  color: #c9f2be;
+}
+
+.dist-hero h1 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 38px;
+  line-height: 1.25;
+  margin-bottom: 14px;
+  max-width: 820px;
+}
+
+.dist-hero-desc {
+  font-size: 15px;
+  color: #d1ead7;
+  max-width: 750px;
+  line-height: 1.6;
+  margin-bottom: 35px;
+}
+
+/* Trust Badges Row */
+.dist-trust-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.dist-trust-item {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  backdrop-filter: blur(6px);
+}
+
+.dist-trust-item span {
+  font-size: 26px;
+}
+
+.dist-trust-item strong {
+  display: block;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 14px;
+  color: #fff;
+}
+
+.dist-trust-item small {
+  display: block;
+  font-size: 11.5px;
+  color: #b0d8bd;
+}
+
+/* Brands Grid Section */
+.dist-brands-section {
+  background: #f5f8f4;
+  padding: 70px 0;
+}
+
+.dist-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 35px;
+}
+
+.dist-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 26px;
+  box-shadow: 0 10px 30px rgba(11, 93, 50, 0.06);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dist-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 36px rgba(11, 93, 50, 0.12);
+}
+
+.dist-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 14px;
+  gap: 10px;
+}
+
+.dist-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.dist-badge {
+  font-size: 10px;
+  font-weight: 800;
+  background: #edf7ec;
+  color: var(--green);
+  padding: 4px 10px;
+  border-radius: 8px;
+  letter-spacing: 0.5px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.dist-card h3 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 18px;
+  color: var(--ink);
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+
+.dist-cat-tag {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #167344;
+  margin-bottom: 12px;
+}
+
+.dist-card-desc {
+  font-size: 12.5px;
+  color: #4b6155;
+  line-height: 1.5;
+  margin-bottom: 18px;
+  flex: 1;
+}
+
+.dist-products-list {
+  background: #fbfdfa;
+  border: 1px solid #e3ede1;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 18px;
+}
+
+.dist-products-list small {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dist-tag-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.dist-tag-group span {
+  background: #fff;
+  border: 1px solid #d2e4d0;
+  color: var(--ink);
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.dist-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.dist-card-actions a {
+  padding: 10px;
+  font-size: 12.5px;
+  text-align: center;
+}
+
+/* Wholesale Banner */
+.dist-wholesale-banner {
+  background: linear-gradient(135deg, #093f23 0%, #155c34 100%);
+  color: #fff;
+  padding: 55px 0;
+}
+
+.wholesale-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 30px;
+}
+
+.wholesale-text h2 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 26px;
+  margin-bottom: 8px;
+}
+
+.wholesale-text p {
+  color: #d1ead7;
+  font-size: 14px;
+  max-width: 600px;
+}
+
+.wholesale-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 320px;
+}
+
+.btn-outline-white {
+  background: transparent;
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  color: #fff;
+}
+
+.btn-outline-white:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: #fff;
+}
+
+/* Responsiveness */
+@media (max-width: 1080px) {
+  .dist-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .dist-trust-row {
+    grid-template-columns: 1fr;
+  }
+  .wholesale-wrap {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .wholesale-actions {
+    width: 100%;
+  }
+}
+
+@media (max-width: 680px) {
+  .dist-grid {
+    grid-template-columns: 1fr;
+  }
+  .dist-hero h1 {
+    font-size: 28px;
+  }
+}

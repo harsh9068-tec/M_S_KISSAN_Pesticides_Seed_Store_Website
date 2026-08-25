@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kissan Farmer Portal & Digital Khata | M/S KISSAN</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="farmer-portal.css" />
+</head>
+<body>
+
+  <!-- Top Header -->
+  <header class="portal-header">
+    <div class="portal-container header-wrap">
+      <a class="brand" href="index.html">
+        <span class="brand-mark">K</span>
+        <div>
+          <strong>M/S KISSAN</strong>
+          <small>किसान पोर्टल एवं डिजिटल पासबुक</small>
+        </div>
+      </a>
+      <div class="header-right">
+        <a href="index.html" class="btn btn-outline">🏪 मुख्य वेबसाइट (Main Store)</a>
+        <button id="farmerLogoutBtn" class="btn btn-danger hidden">🚪 लॉगआउट (Logout)</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- AUTH SECTION (Login & Registration) -->
+  <section id="authSection" class="portal-auth-section">
+    <div class="portal-container">
+      <div class="auth-box">
+        
+        <div class="auth-header">
+          <h2>🌾 किसान सेवा पोर्टल</h2>
+          <p>अपना किसान खाता, पिछली खरीद, बकाया राशि एवं फसल सलाह देखने के लिए लॉगिन करें।</p>
+        </div>
+
+        <div class="auth-tabs">
+          <button class="auth-tab active" id="tabLoginBtn">लॉगिन (Login)</button>
+          <button class="auth-tab" id="tabRegisterBtn">नया किसान पंजीकरण (Register)</button>
+        </div>
+
+        <!-- Login Form -->
+        <form id="farmerLoginForm" class="portal-form">
+          <div class="form-group">
+            <label for="loginMobileOrId">मोबाइल नंबर या किसान ID *</label>
+            <input type="text" id="loginMobileOrId" placeholder="उदा. 9897123456 या KIS-1001" required />
+          </div>
+          <div class="form-group">
+            <label for="loginPin">4-अंकों का पिन (PIN) *</label>
+            <input type="password" id="loginPin" maxlength="6" placeholder="अपना पिन दर्ज करें (उदा. 1122)" required />
+          </div>
+          <button type="submit" class="btn btn-primary btn-full">पोर्टल खोलें (Login) →</button>
+          <p id="loginError" class="form-error"></p>
+
+          <div class="demo-hints">
+            <small>💡 <b>परीक्षण के लिए (Demo Account):</b> मोबाइल: <code>9897123456</code> | पिन: <code>1122</code></small>
+          </div>
+        </form>
+
+        <!-- Register Form (Hidden by default) -->
+        <form id="farmerRegisterForm" class="portal-form hidden">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="regName">किसान का पूरा नाम *</label>
+              <input type="text" id="regName" placeholder="उदा. रामेश्वर सिंह" required />
+            </div>
+            <div class="form-group">
+              <label for="regMobile">मोबाइल नंबर *</label>
+              <input type="tel" id="regMobile" maxlength="10" placeholder="10 अंकों का नंबर" required />
+            </div>
+            <div class="form-group">
+              <label for="regVillage">गांव / पता *</label>
+              <input type="text" id="regVillage" placeholder="उदा. ग्राम बेहड़ा सादात / मोरना" required />
+            </div>
+            <div class="form-group">
+              <label for="regLand">कुल खेती (जमीन / बीघा)</label>
+              <input type="text" id="regLand" placeholder="उदा. 12 बीघा / 2 एकड़" />
+            </div>
+            <div class="form-group full-width">
+              <label for="regCrops">मुख्य फसलें *</label>
+              <input type="text" id="regCrops" placeholder="उदा. गन्ना, गेहूं, धान, सरसों, टमाटर" required />
+            </div>
+            <div class="form-group full-width">
+              <label for="regPin">सुरक्षा पिन बनाएं (4-अंक) *</label>
+              <input type="password" id="regPin" maxlength="6" placeholder="लॉगिन के लिए 4 अंकों का पिन" required />
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-full">पंजीकरण करें (Register Now) →</button>
+          <p id="registerError" class="form-error"></p>
+        </form>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- DASHBOARD SECTION (Visible after login) -->
+  <main id="dashboardSection" class="portal-dashboard hidden">
+    <div class="portal-container">
+      
+      <!-- Top Welcome Banner -->
+      <div class="welcome-card">
+        <div class="welcome-left">
+          <span class="welcome-icon">👨‍🌾</span>
+          <div>
+            <h1>नमस्ते, <span id="farmerWelcomeName">किसान भाई</span>!</h1>
+            <p>मैसर्स किसान पेस्टिसाइड्स एवं बीज स्टोर, बेहड़ा सादात (मोरना) में आपका स्वागत है।</p>
+          </div>
+        </div>
+        <div class="welcome-right">
+          <button id="directWaBtn" class="btn btn-whatsapp">💬 अपनी फसल सलाह पूछें (WhatsApp)</button>
+        </div>
+      </div>
+
+      <!-- Main Dashboard Grid -->
+      <div class="dashboard-grid">
+        
+        <!-- Left: Digital Farmer Card -->
+        <div class="card-column">
+          <div class="kissan-id-card">
+            <div class="kissan-card-top">
+              <div class="kissan-chip"></div>
+              <span class="kissan-badge">प्रमाणित किसान (VERIFIED)</span>
+            </div>
+            <div class="kissan-id-num">
+              <small>FARMER ID</small>
+              <h2 id="cardFarmerId">KIS-1001</h2>
+            </div>
+            <div class="kissan-card-details">
+              <div>
+                <small>किसान नाम / NAME</small>
+                <strong id="cardFarmerName">---</strong>
+              </div>
+              <div>
+                <small>मोबाइल / MOBILE</small>
+                <span id="cardFarmerMobile">---</span>
+              </div>
+              <div>
+                <small>गांव / VILLAGE</small>
+                <span id="cardFarmerVillage">---</span>
+              </div>
+              <div>
+                <small>मुख्य फसलें / CROPS</small>
+                <span id="cardFarmerCrops">---</span>
+              </div>
+            </div>
+            <div class="kissan-card-footer">
+              <span>M/S KISSAN PESTICIDES & SEED STORE</span>
+              <small>BEHRA SADAT • MORNA</small>
+            </div>
+          </div>
+
+          <!-- Khata Overview Stats -->
+          <div class="khata-overview-card">
+            <h3>📊 खाता स्थिति (Khata Status)</h3>
+            <div class="khata-stats">
+              <div class="khata-stat-box">
+                <small>कुल खरीद (Purchases)</small>
+                <strong id="statTotalPurchases">₹0</strong>
+              </div>
+              <div class="khata-stat-box balance-box">
+                <small>वर्तमान शेष / उधारी (Balance)</small>
+                <strong id="statCurrentBalance">₹0</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Transaction History & Recommended Products -->
+        <div class="history-column">
+          
+          <!-- Khata Ledger Table -->
+          <div class="panel-card">
+            <div class="panel-header">
+              <h3>📜 पिछली खरीद एवं खाता विवरण (Purchase History)</h3>
+              <small id="recordCountLabel">0 रिकॉर्ड</small>
+            </div>
+            
+            <div class="table-responsive">
+              <table class="khata-table">
+                <thead>
+                  <tr>
+                    <th>दिनांक</th>
+                    <th>उत्पाद / दवाई का नाम</th>
+                    <th>मात्रा</th>
+                    <th>रकम</th>
+                    <th>जमा</th>
+                    <th>शेष</th>
+                    <th>सलाह / विवरण</th>
+                  </tr>
+                </thead>
+                <tbody id="khataTableBody">
+                  <!-- Dynamic Rows -->
+                </tbody>
+              </table>
+            </div>
+
+            <div id="noKhataMsg" class="no-records hidden">
+              <p>अभी तक कोई खरीद रिकॉर्ड दर्ज नहीं है। दुकान पर खरीदारी करने पर यहाँ विवरण दिखेगा।</p>
+            </div>
+          </div>
+
+          <!-- AI Crop Doctor Portal Widget -->
+          <div class="panel-card advisory-card" style="border-left: 4px solid var(--green);">
+            <div class="panel-header">
+              <h3>🤖 एआई फसल डॉक्टर (AI Plant Disease Scanner)</h3>
+              <small>फोटो अपलोड करें व रोग समाधान पाएं</small>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:12px;">
+              <p style="font-size:13px; color:var(--muted);">
+                क्या आपकी फसल में कोई रोग या कीड़ा लगा है? हमारे मुख्य AI डॉक्टर टूल से पत्ती का फोटो स्कैन करके तुरंत दवा व मात्रा जानें।
+              </p>
+              <a href="index.html#ai-doctor" class="btn btn-primary" style="align-self:flex-start;">
+                🔬 AI फसल डॉक्टर खोलें (Open AI Doctor) →
+              </a>
+            </div>
+          </div>
+
+          <!-- Personalized Crop Advice -->
+          <div class="panel-card advisory-card">
+            <div class="panel-header">
+              <h3>🌾 आपकी फसलों के लिए अनुशंसित दवाइयां (Recommended for You)</h3>
+            </div>
+            <div id="recommendedProductsGrid" class="recommended-grid">
+              <!-- Dynamically populated from products matching farmer crops -->
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="portal-footer">
+    <div class="portal-container">
+      <p>© M/S KISSAN Pesticides & Seed Store • Village Behra Sadat, Post Morna, Muzaffarnagar</p>
+      <small>📞 सहायता: 9760153116 | 💬 व्हाट्सएप: 9760153116</small>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="kissan-master-db.js"></script>
+  <script src="products-data.js"></script>
+  <script src="farmer-db.js"></script>
+  <script src="ai-doctor.js"></script>
+  <script src="farmer-portal.js"></script>
+</body>
+</html>
