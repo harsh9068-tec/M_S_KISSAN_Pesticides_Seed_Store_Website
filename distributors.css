@@ -288,3 +288,33 @@
     font-size: 28px;
   }
 }
+
+/* ========================================================================== */
+/* DARK MODE OVERRIDES FOR DISTRIBUTORS PAGE */
+/* ========================================================================== */
+
+[data-theme="dark"] .dist-main-section {
+  background: #08120d;
+}
+
+[data-theme="dark"] .dist-card {
+  background: #11221a;
+  border-color: #1e3a2e;
+  color: #f0fdf4;
+}
+
+[data-theme="dark"] .dist-card-desc {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .dist-tag-group span {
+  background: #14281f;
+  border-color: #1e3a2e;
+  color: #86efac;
+}
+
+[data-theme="dark"] .dist-trust-item {
+  background: rgba(17, 34, 26, 0.85);
+  border-color: #1e3a2e;
+}
+

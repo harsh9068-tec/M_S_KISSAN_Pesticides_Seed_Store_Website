@@ -21,7 +21,11 @@
           <small>किसान पोर्टल एवं डिजिटल पासबुक</small>
         </div>
       </a>
-      <div class="header-right">
+      <div class="header-right" style="display:flex; align-items:center; gap:10px;">
+        <button type="button" class="theme-toggle-btn" title="Toggle Dark / Bright Theme" aria-label="Toggle Theme">
+          <span class="theme-icon">🌙</span>
+          <span class="theme-label">Dark</span>
+        </button>
         <a href="index.html" class="btn btn-outline">🏪 मुख्य वेबसाइट (Main Store)</a>
         <button id="farmerLogoutBtn" class="btn btn-danger hidden">🚪 लॉगआउट (Logout)</button>
       </div>
@@ -271,6 +275,7 @@
   </footer>
 
   <!-- Scripts -->
+  <script src="theme-manager.js"></script>
   <script src="kissan-master-db.js"></script>
   <script src="api-client.js"></script>
   <script src="products-data.js"></script>

@@ -24,12 +24,21 @@
         </span>
       </a>
 
-      <!-- Language Switcher Pill -->
-      <div class="lang-switch-wrap">
-        <button id="langToggleBtn" class="lang-toggle-btn" aria-label="Switch Language">
-          <span class="lang-flag">🇮🇳</span>
-          <span id="langBtnLabel">हिंदी में देखें</span>
-        </button>
+      <!-- Language & Theme Switchers -->
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div class="lang-switch-wrap">
+          <button id="langToggleBtn" class="lang-toggle-btn" aria-label="Switch Language">
+            <span class="lang-flag">🇮🇳</span>
+            <span id="langBtnLabel">हिंदी में देखें</span>
+          </button>
+        </div>
+
+        <div class="theme-switch-wrap">
+          <button type="button" class="theme-toggle-btn" title="Toggle Dark / Bright Theme" aria-label="Toggle Theme">
+            <span class="theme-icon">🌙</span>
+            <span class="theme-label">Dark</span>
+          </button>
+        </div>
       </div>
 
       <button class="menu-toggle" aria-label="Open menu">☰</button>
@@ -320,6 +329,7 @@
   <script src="kissan-master-db.js"></script>
   <script src="translations.js"></script>
   <script src="products-data.js"></script>
+  <script src="theme-manager.js"></script>
   <script src="farmer-db.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {

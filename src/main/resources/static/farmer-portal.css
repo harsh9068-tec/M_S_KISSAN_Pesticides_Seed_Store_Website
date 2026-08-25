@@ -657,3 +657,110 @@ button, input, select, textarea {
     grid-template-columns: 1fr;
   }
 }
+
+/* ========================================================================== */
+/* THEME SWITCHER & DARK MODE OVERRIDES FOR FARMER PORTAL */
+/* ========================================================================== */
+
+.theme-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f1f5f9;
+  border: 1.5px solid #cbd5e1;
+  color: #334155;
+  padding: 7px 13px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 750;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.theme-toggle-btn:hover {
+  background: #e2e8f0;
+  transform: translateY(-1px);
+}
+
+.theme-toggle-btn.dark-active {
+  background: #1e293b;
+  border-color: #38bdf8;
+  color: #f8fafc;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
+}
+
+[data-theme="dark"] {
+  --green: #22c55e;
+  --green2: #4ade80;
+  --gold: #facc15;
+  --bg: #08120d;
+  --card-bg: #11221a;
+  --ink: #f0fdf4;
+  --muted: #94a3b8;
+  --line: #1e3a2e;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="dark"] body {
+  background-color: #08120d;
+  color: #f0fdf4;
+}
+
+[data-theme="dark"] .portal-header {
+  background: rgba(8, 18, 13, 0.94);
+  border-bottom-color: var(--line);
+}
+
+[data-theme="dark"] .auth-box,
+[data-theme="dark"] .auth-card,
+[data-theme="dark"] .panel-card,
+[data-theme="dark"] .welcome-card,
+[data-theme="dark"] .stat-card,
+[data-theme="dark"] .tx-table-wrap,
+[data-theme="dark"] .rec-product-card,
+[data-theme="dark"] .demo-hints {
+  background: #11221a;
+  border-color: #1e3a2e;
+  color: #f0fdf4;
+}
+
+[data-theme="dark"] .tx-table th {
+  background: #14281f;
+  color: #94a3b8;
+  border-bottom-color: #1e3a2e;
+}
+
+[data-theme="dark"] .tx-table td {
+  border-bottom-color: #1e3a2e;
+  color: #f0fdf4;
+}
+
+[data-theme="dark"] .tx-table tr:hover td {
+  background: #14281f;
+}
+
+[data-theme="dark"] .form-group input,
+[data-theme="dark"] .form-group select,
+[data-theme="dark"] .form-group textarea {
+  background: #09140e;
+  border-color: #1e3a2e;
+  color: #f0fdf4;
+}
+
+[data-theme="dark"] .auth-tabs button {
+  background: #14281f;
+  border-color: #1e3a2e;
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .auth-tabs button.active {
+  background: var(--green);
+  color: #08120d;
+}
+
+[data-theme="dark"] .portal-footer {
+  background: #060c09;
+  border-top-color: #1e3a2e;
+}
+
