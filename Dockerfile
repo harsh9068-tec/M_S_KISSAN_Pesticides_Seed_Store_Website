@@ -24,11 +24,15 @@ RUN mvn clean package -DskipTests -B
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
-# Create writable data directory for H2 persistent database
-RUN mkdir -p /app/data && chmod -R 777 /app/data
+# Create writable data directory for H2 persistent database and static assets
+RUN mkdir -p /app/data /app/static && chmod -R 777 /app/data /app/static
 
 # Copy executable jar from build stage
 COPY --from=build /app/target/kissan-pesticides-seed-store-1.0.0.jar app.jar
+
+# Copy static assets directly to runtime filesystem as fail-safe
+COPY --from=build /app/src/main/resources/static/ /app/static/
+COPY --from=build /app/src/main/resources/static/ /app/
 
 # Expose default port
 EXPOSE 8080
