@@ -93,18 +93,19 @@ document.addEventListener('DOMContentLoaded', () => {
     activeMobileForOtp = rawVal;
     loginError.textContent = '';
 
-    // Generate 6-digit OTP via Master DB engine
+    // Generate 6-digit OTP via Master DB / Backend engine
     let otpRes = { code: '123456' };
     if (window.KISSAN_DB && window.KISSAN_DB.otp) {
       otpRes = window.KISSAN_DB.otp.generate(activeMobileForOtp, 'farmer_login');
     }
 
-    // Update UI to Step 2
-    otpSentMobileLabel.textContent = activeMobileForOtp;
-    const popupOtpCode = document.getElementById('popupOtpCode');
-    if (popupOtpCode) {
-      popupOtpCode.textContent = otpRes.code;
-    }
+    // Mask phone number for privacy (e.g. +91 98971 •••••)
+    const cleanDigits = activeMobileForOtp.replace(/\D/g, '');
+    const masked = cleanDigits.length >= 10
+      ? `+91 ${cleanDigits.slice(0, 5)} •••••`
+      : activeMobileForOtp;
+
+    otpSentMobileLabel.textContent = masked;
 
     otpStep1.classList.add('hidden');
     otpStep2.classList.remove('hidden');
@@ -118,16 +119,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     startResendTimer();
   }
-
-  // 1-Click Auto-Fill OTP button
-  const autoFillOtpBtn = document.getElementById('autoFillOtpBtn');
-  autoFillOtpBtn?.addEventListener('click', () => {
-    const popupOtpCode = document.getElementById('popupOtpCode');
-    if (popupOtpCode && loginOtpInput) {
-      loginOtpInput.value = popupOtpCode.textContent.trim();
-      loginOtpInput.focus();
-    }
-  });
 
   getOtpBtn?.addEventListener('click', handleSendOtp);
 

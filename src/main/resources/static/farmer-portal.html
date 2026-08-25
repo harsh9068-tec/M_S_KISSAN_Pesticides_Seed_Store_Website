@@ -60,37 +60,32 @@
           <!-- Step 2: Enter 6-Digit OTP (Hidden initially) -->
           <div id="otpStep2" class="hidden">
             
-            <!-- Instant On-Screen OTP Notification Pill -->
-            <div id="otpPopupCard" class="otp-popup-card">
-              <div class="otp-popup-top">
-                <span class="otp-pill-icon">🔔</span>
-                <div style="flex:1;">
-                  <strong style="display:block; font-size:12px; color:#14532d;">आपका सुरक्षा ओटीपी (Your Security OTP):</strong>
-                  <div class="otp-display-code" id="popupOtpCode">123456</div>
-                </div>
-                <button type="button" id="autoFillOtpBtn" class="btn-autofill">📋 स्वतः भरें (Auto-Fill)</button>
+            <div class="otp-sent-banner" style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; padding:12px; display:flex; align-items:center; gap:12px; margin-bottom:14px;">
+              <span style="font-size:26px;">📲</span>
+              <div style="flex:1;">
+                <strong style="display:block; font-size:13px; color:#15803d;">ओटीपी आपके मोबाइल पर भेजा गया</strong>
+                <small id="otpSentMobileLabel" style="display:block; font-size:12px; color:#4b5563; font-family:monospace; margin-top:2px;">+91 98971 •••••</small>
               </div>
-              <small style="display:block; margin-top:4px; font-size:11px; color:#166534;">यह कोड नीचे दर्ज करें या "Auto-Fill" बटन दबाएं।</small>
             </div>
 
-            <div class="form-group" style="margin-top:14px;">
-              <label for="loginOtpInput">6-अंकों का ओटीपी दर्ज करें (Enter 6-Digit OTP) *</label>
-              <input type="text" id="loginOtpInput" maxlength="6" placeholder="• • • • • •" style="letter-spacing:6px; font-size:22px; text-align:center; font-weight:800;" />
+            <div class="form-group">
+              <label for="loginOtpInput">मोबाइल पर प्राप्त 6-अंकों का ओटीपी दर्ज करें (Enter 6-Digit OTP) *</label>
+              <input type="password" id="loginOtpInput" maxlength="6" placeholder="• • • • • •" style="letter-spacing:6px; font-size:22px; text-align:center; font-weight:800;" autocomplete="one-time-code" required />
             </div>
 
-            <button type="submit" class="btn btn-primary btn-full">सत्यापित करें व लॉगिन करें (Verify & Login) →</button>
+            <button type="submit" class="btn btn-primary btn-full" style="margin-top:6px;">सत्यापित करें व लॉगिन करें (Verify & Login) →</button>
 
-            <div class="otp-actions-row">
-              <a id="openWaOtpBtn" href="#" target="_blank" class="btn btn-whatsapp" style="padding:6px 12px; font-size:12px;">
-                💬 व्हाट्सएप पर ओटीपी देखें
+            <div class="otp-actions-row" style="margin-top:12px; display:flex; gap:8px; justify-content:space-between; align-items:center;">
+              <a id="openWaOtpBtn" href="#" target="_blank" class="btn btn-whatsapp" style="padding:7px 12px; font-size:12px; flex:1; text-align:center;">
+                💬 व्हाट्सएप पर ओटीपी प्राप्त करें
               </a>
-              <button type="button" id="resendOtpBtn" class="btn btn-outline" style="padding:6px 12px; font-size:12px;" disabled>
+              <button type="button" id="resendOtpBtn" class="btn btn-outline" style="padding:7px 12px; font-size:12px;" disabled>
                 ⏱️ पुनः भेजें (<span id="resendCountdown">30</span>s)
               </button>
             </div>
             
-            <button type="button" id="changeMobileBtn" style="display:block; margin:12px auto 0; font-size:12px; color:var(--muted); background:none; border:none; cursor:pointer; text-decoration:underline;">
-              ← मोबाइल नंबर बदलें (Change Mobile)
+            <button type="button" id="changeMobileBtn" style="display:block; margin:14px auto 0; font-size:12px; color:var(--muted); background:none; border:none; cursor:pointer; text-decoration:underline;">
+              ← दूसरा मोबाइल नंबर दर्ज करें (Change Mobile)
             </button>
           </div>
 
