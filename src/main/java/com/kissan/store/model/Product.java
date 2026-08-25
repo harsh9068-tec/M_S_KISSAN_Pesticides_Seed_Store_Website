@@ -1,59 +1,47 @@
 package com.kissan.store.model;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "products")
 public class Product {
 
     @Id
-    @Column(name = "id", length = 64)
     private String id;
 
-    @Column(name = "name", nullable = false)
+    @Column(nullable = false)
     private String name;
 
-    @Column(name = "brand")
     private String brand;
 
-    @Column(name = "category", nullable = false)
-    private String category;
+    @Column(nullable = false)
+    private String category; // fungicide, insecticide, seed, bio, herbicide, fertilizer
 
-    @Column(name = "crops", length = 1000)
     private String crops;
 
-    @Column(name = "target", length = 2000)
+    @Column(length = 1000)
     private String target;
 
-    @Column(name = "dosage")
     private String dosage;
 
-    @Column(name = "pack_sizes")
     private String packSizes;
 
-    @Column(name = "price")
-    private Double price = 0.0;
+    private Double price;
 
-    @Column(name = "icon")
-    private String icon = "🌱";
+    private String icon;
 
     @Lob
-    @Column(name = "image", columnDefinition = "CLOB")
+    @Column(columnDefinition = "CLOB")
     private String image;
 
-    @Column(name = "in_stock")
     private Boolean inStock = true;
 
-    @Column(name = "featured")
     private Boolean featured = true;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt = LocalDateTime.now();
 
     public Product() {}
 
-    public Product(String id, String name, String brand, String category, String crops, String target, String dosage, String packSizes, String icon, boolean inStock, boolean featured) {
+    public Product(String id, String name, String brand, String category, String crops, String target,
+                   String dosage, String packSizes, Double price, String icon, String image, Boolean inStock, Boolean featured) {
         this.id = id;
         this.name = name;
         this.brand = brand;
@@ -62,13 +50,13 @@ public class Product {
         this.target = target;
         this.dosage = dosage;
         this.packSizes = packSizes;
+        this.price = price;
         this.icon = icon;
-        this.inStock = inStock;
-        this.featured = featured;
-        this.createdAt = LocalDateTime.now();
+        this.image = image;
+        this.inStock = inStock != null ? inStock : true;
+        this.featured = featured != null ? featured : true;
     }
 
-    // Getters and Setters
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
@@ -107,7 +95,4 @@ public class Product {
 
     public Boolean getFeatured() { return featured; }
     public void setFeatured(Boolean featured) { this.featured = featured; }
-
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

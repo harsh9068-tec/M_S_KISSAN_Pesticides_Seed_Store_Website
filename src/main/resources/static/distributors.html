@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Authorized Distributor & Partner Brands | M/S KISSAN Pesticides & Seed Store</title>
+  <meta name="description" content="Authorized agricultural distributor for Syngenta, DuPont/Corteva, Agrico Organics, Triveni Fertilizers, Coromandel, Safex Chemicals, and Samradhi Crop Chemicals in Muzaffarnagar." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="distributors.css" />
+</head>
+<body>
+
+  <!-- Site Header -->
+  <header class="site-header">
+    <div class="container nav-wrap">
+      <a class="brand" href="index.html">
+        <span class="brand-mark">K</span>
+        <span>
+          <strong>M/S KISSAN</strong>
+          <small data-i18n="brand_sub">Pesticides & Seed Store</small>
+        </span>
+      </a>
+
+      <!-- Language Switcher Pill -->
+      <div class="lang-switch-wrap">
+        <button id="langToggleBtn" class="lang-toggle-btn" aria-label="Switch Language">
+          <span class="lang-flag">🇮🇳</span>
+          <span id="langBtnLabel">हिंदी में देखें</span>
+        </button>
+      </div>
+
+      <button class="menu-toggle" aria-label="Open menu">☰</button>
+      <nav class="nav" aria-label="Main navigation">
+        <a href="index.html#home" data-i18n="nav_home">Home</a>
+        <a href="index.html#products" data-i18n="nav_products">Products</a>
+        <a href="index.html#ai-doctor" style="background:#0b5d32; color:#fff; padding:6px 12px; border-radius:8px;" data-i18n="nav_ai_doctor">🤖 AI Crop Doctor</a>
+        <a href="distributors.html" class="active-nav-link" data-i18n="nav_distributors">🤝 Authorized Brands</a>
+        <a href="farmer-portal.html" class="portal-nav-link" data-i18n="nav_farmer_portal">🌾 Farmer Portal</a>
+        <a href="index.html#contact" data-i18n="nav_contact">Contact</a>
+      </nav>
+
+      <a class="nav-whatsapp" href="https://wa.me/919760153116?text=Hello%20M%2FS%20KISSAN%2C%20I%20want%20to%20enquire%20about%20distributorship%20and%20bulk%20brand%20products." target="_blank" rel="noopener" data-i18n="nav_whatsapp">WhatsApp</a>
+    </div>
+  </header>
+
+  <main>
+    <!-- Distributor Hero Banner -->
+    <section class="dist-hero">
+      <div class="container">
+        <div class="dist-hero-badge" data-i18n="dist_hero_badge">🤝 OFFICIAL DISTRIBUTORSHIP & DEALERSHIP PORTFOLIO</div>
+        <h1 data-i18n="dist_hero_title">Direct Authorized Distributor of India's Leading Agri Brands</h1>
+        <p class="dist-hero-desc" data-i18n="dist_hero_desc">
+          M/S KISSAN is the certified regional distribution & retail partner in Muzaffarnagar & Jansath region for world-renowned agricultural manufacturers. 100% genuine original batch guaranteed.
+        </p>
+
+        <!-- Trust Badges -->
+        <div class="dist-trust-row">
+          <div class="dist-trust-item">
+            <span>🛡️</span>
+            <div>
+              <strong data-i18n="dist_t1_title">100% Original Products</strong>
+              <small data-i18n="dist_t1_sub">Direct factory-sealed batches with GST bill</small>
+            </div>
+          </div>
+          <div class="dist-trust-item">
+            <span>🏷️</span>
+            <div>
+              <strong data-i18n="dist_t2_title">Fair Government Rates</strong>
+              <small data-i18n="dist_t2_sub">Transparent pricing with no middleman margins</small>
+            </div>
+          </div>
+          <div class="dist-trust-item">
+            <span>📦</span>
+            <div>
+              <strong data-i18n="dist_t3_title">Wholesale & Retail Ready</strong>
+              <small data-i18n="dist_t3_sub">Stock available for individual farmers & sub-dealers</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Brands Grid Section -->
+    <section class="section dist-brands-section">
+      <div class="container">
+        <div class="section-heading centered">
+          <div class="section-kicker" data-i18n="dist_sec_kicker">PARTNER PORTFOLIO</div>
+          <h2 data-i18n="dist_sec_title">Brands & Companies We Officially Deal In</h2>
+          <p data-i18n="dist_sec_sub">Click on any brand to view available products or enquire for bulk wholesale supply.</p>
+        </div>
+
+        <div class="dist-grid" id="distBrandsGrid">
+          <!-- Populated dynamically via JS / Static fallback -->
+
+          <!-- 1. SYNGENTA -->
+          <article class="dist-card" style="border-top: 4px solid #0b5d32;">
+            <div class="dist-card-top">
+              <span class="dist-icon" style="background:#edf7ec; color:#0b5d32;">🌱</span>
+              <span class="dist-badge">⭐ Primary Authorized Dealer</span>
+            </div>
+            <h3>Syngenta India Limited</h3>
+            <span class="dist-cat-tag">Crop Protection & Bio-Stimulants</span>
+            <p class="dist-card-desc" data-i18n="brand_desc_syngenta">
+              World leader in agricultural science, providing advanced research-backed fungicides, insecticides, and crop enhancers like Miravis Duo, Incipio, Score, and Isabion.
+            </p>
+            <div class="dist-products-list">
+              <small><b>Key Products:</b></small>
+              <div class="dist-tag-group">
+                <span>Miravis Duo</span>
+                <span>Incipio</span>
+                <span>Score</span>
+                <span>Simodis</span>
+                <span>Kavach Flo</span>
+                <span>Isabion</span>
+              </div>
+            </div>
+            <div class="dist-card-actions">
+              <a href="index.html?search=Syngenta#products" class="btn btn-secondary btn-full">🔍 View Syngenta Products</a>
+              <a href="https://wa.me/919760153116?text=Hello%20M%2FS%20KISSAN%2C%20I%20want%20to%20enquire%20about%20Syngenta%20products%20pricing%20and%20stock." target="_blank" rel="noopener" class="btn btn-whatsapp btn-full">💬 WhatsApp Enquiry</a>
+            </div>
+          </article>
+
+          <!-- 2. DUPONT / CORTEVA -->
+          <article class="dist-card" style="border-top: 4px solid #00539b;">
+            <div class="dist-card-top">
+              <span class="dist-icon" style="background:#e8f1fa; color:#00539b;">🔬</span>
+              <span class="dist-badge" style="background:#e8f1fa; color:#00539b;">⭐ Authorized Distributor</span>
+            </div>
+            <h3>DuPont / Corteva Agriscience</h3>
+            <span class="dist-cat-tag">Advanced Insecticides & Fungicides</span>
+            <p class="dist-card-desc" data-i18n="brand_desc_dupont">
+              Global innovator famous for the gold-standard borer control chemical Coragen, Curzate downy mildew fungicide, and specialized hopper insecticides.
+            </p>
+            <div class="dist-products-list">
+              <small><b>Key Products:</b></small>
+              <div class="dist-tag-group">
+                <span>Coragen 18.5% SC</span>
+                <span>Curzate Fungicide</span>
+                <span>Pexalon 10% SC</span>
+              </div>
+            </div>
+            <div class="dist-card-actions">
+              <a href="index.html?search=DuPont#products" class="btn btn-secondary btn-full">🔍 View DuPont Products</a>
+              <a href="https://wa.me/919760153116?text=Hello%20M%2FS%20KISSAN%2C%20I%20want%20to%20enquire%20about%20DuPont%20Coragen%20and%20other%20products." target="_blank" rel="noopener" class="btn btn-whatsapp btn-full">💬 WhatsApp Enquiry</a>
+            </div>
+          </article>
+
+          <!-- 3. AGRICO ORGANICS -->
+          <article class="dist-card" style="border-top: 4px solid #2e7d32;">
+            <div class="dist-card-top">
+              <span class="dist-icon" style="background:#eff8ee; color:#2e7d32;">🌾</span>
+              <span class="dist-badge" style="background:#eff8ee; color:#2e7d32;">⭐ Authorized Distributor</span>
+            </div>
+            <h3>Agrico Organics Limited</h3>
+            <span class="dist-cat-tag">Agrochemicals, Weedicides & Bio-Granules</span>
+            <p class="dist-card-desc" data-i18n="brand_desc_agrico">
+              Pioneer in wheat weedicides (Gulli Danda / Mandusi control with Clodinafop), broad-spectrum Mancozeb, and high-efficiency organic Bio-Zyme granules.
+            </p>
+            <div class="dist-products-list">
+              <small><b>Key Products:</b></small>
+              <div class="dist-tag-group">
+                <span>Agri-Clodinafop 15% WP</span>
+                <span>Agri-Mancozeb 75% WP</span>
+                <span>Agri-Biozyme</span>
+              </div>
+            </div>
+            <div class="dist-card-actions">
+              <a href="index.html?search=Agrico#products" class="btn btn-secondary btn-full">🔍 View Agrico Products</a>
+              <a href="https://wa.me/919760153116?text=Hello%20M%2FS%20KISSAN%2C%20I%20want%20to%20enquire%20about%20Agrico%20Organics%20products." target="_blank" rel="noopener" class="btn btn-whatsapp btn-full">💬 WhatsApp Enquiry</a>
+            </div>
+          </article>
+
+          <!-- 4. TRIVENI FERTILIZERS -->
+          <article class="dist-card" style="border-top: 4px solid #d97706;">
+            <div class="dist-card-top">
+              <span class="dist-icon" style="background:#fef7ea; color:#d97706;">🧪</span>
+              <span class="dist-badge" style="background:#fef7ea; color:#d97706;">⭐ Authorized Fertilizer Distributor</span>
+            </div>
+            <h3>Triveni Fertilizers Private Limited</h3>
+            <span class="dist-cat-tag">100% Water-Soluble Fertilizers & Micronutrients</span>
+            <p class="dist-card-desc" data-i18n="brand_desc_triveni">
+              High-purity 100% water-soluble NPK specialty fertilizers (19:19:19), Zinc Sulfate Monohydrate 33%, and soil-enriching Phosphate Rich Organic Manure (PROM).
+            </p>
+            <div class="dist-products-list">
+              <small><b>Key Products:</b></small>
+              <div class="dist-tag-group">
+                <span>NPK 19:19:19 Soluble</span>
+                <span>Zinc Sulfate 33%</span>
+                <span>Triveni PROM</span>
+              </div>
+            </div>
+            <div class="dist-card-actions">
+              <a href="index.html?search=Triveni#products" class="btn btn-secondary btn-full">🔍 View Triveni Products</a>
+              <a href="https://wa.me/919760153116?text=Hello%20M%2FS%20KISSAN%2C%20I%20want%20to%20enquire%20about%20Triveni%20Fertilizers%20and%20NPK." target="_blank" rel="noopener" class="btn btn-whatsapp btn-full">💬 WhatsApp Enquiry</a>
+            </div>
+          </article>
+
+          <!-- 5. COROMANDEL INTERNATIONAL -->
+          <article class="dist-card" style="border-top: 4px solid #c2410c;">
+            <div class="dist-card-top">
+              <span class="dist-icon" style="background:#fef2ed; color:#c2410c;">🚜</span>
+              <span class="dist-badge" style="background:#fef2ed; color:#c2410c;">⭐ Authorized Dealer & Partner</span>
+            </div>
+            <h3>Coromandel International Limited (Gromor)</h3>
+            <span class="dist-cat-tag">Gromor Complex Fertilizers & Bio-Stimulants</span>
+            <p class="dist-card-desc" data-i18n="brand_desc_coromandel">
+              India's premier manufacturer of high-analysis complex fertilizers (Gromor 28:28:0), granular borer protection (Ferterra), and bio-stimulants (Fantac Plus).
+            </p>
+            <div class="dist-products-list">
+              <small><b>Key Products:</b></small>
+              <div class="dist-tag-group">
+                <span>Gromor 28:28:0 NPK</span>
+                <span>Fantac Plus Booster</span>
+                <span>Ferterra 0.4% GR</span>
+              </div>
+            </div>
+            <div class="dist-card-actions">
+              <a href="index.html?search=Coromandel#products" class="btn btn-secondary btn-full">🔍 View Coromandel Products</a>
+              <a href="https://wa.me/919760153116?text=Hello%20M%2FS%20KISSAN%2C%20I%20want%20to%20enquire%20about%20Coromandel%20Gromor%20and%20Fantac%20Plus." target="_blank" rel="noopener" class="btn btn-whatsapp btn-full">💬 WhatsApp Enquiry</a>
+            </div>
+          </article>
+
+          <!-- 6. SAFEX CHEMICALS -->
+          <article class="dist-card" style="border-top: 4px solid #1e40af;">
+            <div class="dist-card-top">
+              <span class="dist-icon" style="background:#eff4fe; color:#1e40af;">🛡️</span>
+              <span class="dist-badge" style="background:#eff4fe; color:#1e40af;">⭐ Authorized Distributor</span>
+            </div>
+            <h3>Safex Chemicals (India) Limited</h3>
+            <span class="dist-cat-tag">Herbicides, Insecticides & Sucking Pest Control</span>
+            <p class="dist-card-desc" data-i18n="brand_desc_safex">
+              Comprehensive range of crop protection products including paddy weedicides (Safari Pretilachlor), Safuron (Profenofos + Cypermethrin), and Safegor.
+            </p>
+            <div class="dist-products-list">
+              <small><b>Key Products:</b></small>
+              <div class="dist-tag-group">
+                <span>Safex Safari (Pretilachlor)</span>
+                <span>Safex Safuron</span>
+                <span>Safex Safegor</span>
+              </div>
+            </div>
+            <div class="dist-card-actions">
+              <a href="index.html?search=Safex#products" class="btn btn-secondary btn-full">🔍 View Safex Products</a>
+              <a href="https://wa.me/919760153116?text=Hello%20M%2FS%20KISSAN%2C%20I%20want%20to%20enquire%20about%20Safex%20Chemicals%20products." target="_blank" rel="noopener" class="btn btn-whatsapp btn-full">💬 WhatsApp Enquiry</a>
+            </div>
+          </article>
+
+          <!-- 7. SAMRADHI CROP CHEMICALS -->
+          <article class="dist-card" style="border-top: 4px solid #047857;">
+            <div class="dist-card-top">
+              <span class="dist-icon" style="background:#ecfdf5; color:#047857;">🍃</span>
+              <span class="dist-badge" style="background:#ecfdf5; color:#047857;">⭐ Authorized Distributor</span>
+            </div>
+            <h3>Samradhi Crop Chemicals Private Limited</h3>
+            <span class="dist-cat-tag">Insecticides, Growth Regulators & Blast Control</span>
+            <p class="dist-card-desc" data-i18n="brand_desc_samradhi">
+              High-potency caterpillar killer (Sam-Super Emamectin Benzoate 5% SG), plant height and yield booster (Sam-Gold Gibberellic Acid), and paddy blast controller (Sam-Blast).
+            </p>
+            <div class="dist-products-list">
+              <small><b>Key Products:</b></small>
+              <div class="dist-tag-group">
+                <span>Samradhi Sam-Super</span>
+                <span>Samradhi Sam-Gold PGR</span>
+                <span>Samradhi Sam-Blast</span>
+              </div>
+            </div>
+            <div class="dist-card-actions">
+              <a href="index.html?search=Samradhi#products" class="btn btn-secondary btn-full">🔍 View Samradhi Products</a>
+              <a href="https://wa.me/919760153116?text=Hello%20M%2FS%20KISSAN%2C%20I%20want%20to%20enquire%20about%20Samradhi%20Crop%20Chemicals." target="_blank" rel="noopener" class="btn btn-whatsapp btn-full">💬 WhatsApp Enquiry</a>
+            </div>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Wholesale & Bulk Supply CTA Banner -->
+    <section class="dist-wholesale-banner">
+      <div class="container wholesale-wrap">
+        <div class="wholesale-text">
+          <h2 data-i18n="wholesale_title">Need Wholesale or Bulk Supply for Your Village or Farm?</h2>
+          <p data-i18n="wholesale_desc">
+            We provide direct dealership supply, advance seasonal booking discounts, and GST invoice support for retail shops, cane societies, and large farmers.
+          </p>
+        </div>
+        <div class="wholesale-actions">
+          <a href="https://wa.me/919760153116?text=Hello%20Mr.%20Mahipal%20Singh%20(M%2FS%20KISSAN)%2C%20I%20am%20interested%20in%20Bulk%20Wholesale%20Supply%20and%20Dealership%20rates." target="_blank" rel="noopener" class="btn btn-whatsapp btn-lg">
+            💬 Bulk Dealership WhatsApp Enquiry
+          </a>
+          <a href="tel:+919760153116" class="btn btn-outline-white btn-lg">
+            📞 Direct Call: 9760153116
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container footer-wrap">
+      <div><strong>M/S KISSAN</strong><span data-i18n="brand_sub">Pesticides & Seed Store</span></div>
+      <div data-i18n="footer_addr">Village Behra Sadat • Post Morna • Muzaffarnagar, U.P. 251316</div>
+      <div class="footer-meta-right">
+        <div>© <span id="year"></span> M/S KISSAN. <span data-i18n="footer_rights">All rights reserved.</span></div>
+        <div style="display:flex; gap:12px; align-items:center; margin-top:4px;">
+          <a href="distributors.html" class="admin-portal-link" data-i18n="nav_distributors">🤝 Authorized Brands</a>
+          <span>•</span>
+          <a href="farmer-portal.html" class="admin-portal-link" data-i18n="nav_farmer_portal">🌾 Farmer Portal</a>
+          <span>•</span>
+          <a href="admin.html" class="admin-portal-link" title="Store Owner / Staff Login" data-i18n="footer_admin_link">⚙️ Owner / Admin Portal</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <a class="floating-wa" href="https://wa.me/919760153116?text=Hello%20M%2FS%20KISSAN%2C%20I%20want%20to%20enquire%20about%20authorized%20brand%20products." target="_blank" rel="noopener" aria-label="WhatsApp">💬</a>
+
+  <script src="kissan-master-db.js"></script>
+  <script src="translations.js"></script>
+  <script src="products-data.js"></script>
+  <script src="farmer-db.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const yearElem = document.getElementById('year');
+      if (yearElem) yearElem.textContent = new Date().getFullYear();
+
+      // Mobile Menu
+      const menuToggle = document.querySelector('.menu-toggle');
+      const nav = document.querySelector('.nav');
+      menuToggle?.addEventListener('click', () => {
+        nav.classList.toggle('open');
+      });
+
+      // Bilingual toggle
+      const langToggleBtn = document.getElementById('langToggleBtn');
+      const langBtnLabel = document.getElementById('langBtnLabel');
+      let currentLang = window.I18n ? window.I18n.getLang() : 'en';
+
+      function applyDistLanguage(lang) {
+        if (!window.I18n || !window.I18n.TRANSLATIONS[lang]) return;
+        currentLang = lang;
+        window.I18n.setLang(lang);
+        const dict = window.I18n.TRANSLATIONS[lang];
+
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+          const key = el.dataset.i18n;
+          if (dict[key]) el.innerHTML = dict[key];
+        });
+
+        if (langBtnLabel) {
+          langBtnLabel.textContent = lang === 'hi' ? 'Switch to English' : 'हिंदी में देखें';
+        }
+      }
+
+      langToggleBtn?.addEventListener('click', () => {
+        const newLang = currentLang === 'hi' ? 'en' : 'hi';
+        applyDistLanguage(newLang);
+      });
+
+      applyDistLanguage(currentLang);
+    });
+  </script>
+</body>
+</html>

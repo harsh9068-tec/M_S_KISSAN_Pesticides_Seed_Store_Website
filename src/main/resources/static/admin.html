@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin & Master Database Portal | M/S KISSAN</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+
+  <!-- AUTHENTICATION SCREEN -->
+  <div id="authScreen" class="auth-screen">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <span class="brand-mark">K</span>
+        <div>
+          <h2>M/S KISSAN</h2>
+          <small>Admin & Master Database Portal</small>
+        </div>
+      </div>
+      <p class="auth-desc">Enter your Store Security PIN & 2-Factor OTP to access store management.</p>
+      
+      <form id="loginForm" class="auth-form">
+        <!-- Step 1: Security PIN -->
+        <div id="adminPinStep">
+          <div class="input-group">
+            <label for="adminPinInput">Security PIN</label>
+            <input type="password" id="adminPinInput" maxlength="12" placeholder="Enter Security PIN (908442)" autofocus required />
+          </div>
+          <button type="button" id="adminVerifyPinBtn" class="btn btn-primary btn-full">Next: 2FA Verification →</button>
+        </div>
+
+        <!-- Step 2: 2FA OTP -->
+        <div id="adminOtpStep" class="hidden">
+          <div class="otp-banner-box" style="margin-bottom:14px; background:#edf7ec; padding:10px 14px; border-radius:12px; border:1px solid #c2e2be; display:flex; align-items:center; gap:10px;">
+            <span style="font-size:22px;">🔐</span>
+            <div>
+              <strong style="display:block; font-size:13px; color:var(--green);">2FA Security Code Sent</strong>
+              <small style="display:block; font-size:11px; color:var(--muted);">Mr. Mahipal Singh (9760153116)</small>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label for="adminOtpInput">Enter 6-Digit Admin OTP</label>
+            <input type="text" id="adminOtpInput" maxlength="6" placeholder="• • • • • •" style="letter-spacing:6px; font-size:22px; text-align:center; font-weight:800;" />
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-full">Unlock Dashboard →</button>
+
+          <div style="display:flex; gap:8px; align-items:center; justify-content:space-between; margin-top:10px;">
+            <a id="adminWaOtpLink" href="#" target="_blank" class="btn btn-whatsapp" style="padding:6px 12px; font-size:12px;">
+              💬 Get OTP on WhatsApp
+            </a>
+            <button type="button" id="adminBackToPinBtn" class="btn btn-outline" style="padding:6px 12px; font-size:12px;">
+              ← Back to PIN
+            </button>
+          </div>
+        </div>
+
+        <p id="authError" class="auth-error" style="margin-top:10px;"></p>
+      </form>
+
+      <div class="auth-footer">
+        <a href="index.html">← Return to Public Website</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN DASHBOARD (Hidden until authenticated) -->
+  <div id="dashboardScreen" class="dashboard-screen hidden">
+    
+    <!-- Top Header -->
+    <header class="admin-header">
+      <div class="admin-container header-inner">
+        <div class="brand">
+          <span class="brand-mark">K</span>
+          <div>
+            <strong>M/S KISSAN ADMIN</strong>
+            <small>Village Behra Sadat, Morna</small>
+          </div>
+        </div>
+
+        <!-- Section Navigation Tabs -->
+        <div class="admin-nav-tabs">
+          <button class="nav-tab active" data-tab="products">📦 Products</button>
+          <button class="nav-tab" data-tab="farmers">🌾 Farmer Khata</button>
+          <button class="nav-tab" data-tab="invoices">🧾 POS Invoices</button>
+          <button class="nav-tab" data-tab="analytics">🔍 Search Demand</button>
+          <button class="nav-tab" data-tab="database">🗄️ Master Database</button>
+        </div>
+
+        <div class="header-actions">
+          <a href="farmer-portal.html" class="btn btn-outline" target="_blank" title="Open Farmer Passbook Portal">👨‍🌾 Farmer Portal</a>
+          <a href="distributors.html" class="btn btn-outline" target="_blank" title="View Distributor Page">🤝 Brands</a>
+          <a href="index.html" class="btn btn-outline" target="_blank" title="Preview live website">🌐 Live Store</a>
+          <button id="changePinBtn" class="btn btn-outline">🔑 Change PIN</button>
+          <button id="logoutBtn" class="btn btn-danger">🔒 Logout</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="admin-container main-content">
+      
+      <!-- ==================== TAB 1: PRODUCT CATALOG ==================== -->
+      <section id="tabContentProducts" class="tab-content active">
+        
+        <!-- Welcome & Stats Banner -->
+        <div class="banner-section">
+          <div class="banner-text">
+            <h1>Product Inventory Manager</h1>
+            <p>Add, edit, and organize all authorized seeds, pesticides, and bio-nutrients displayed on your website.</p>
+          </div>
+          <div class="banner-buttons">
+            <button id="openAddModalBtn" class="btn btn-primary btn-lg">➕ Add New Product</button>
+          </div>
+        </div>
+
+        <!-- Stat Counters -->
+        <div class="stats-row">
+          <div class="stat-card">
+            <span class="stat-icon">📦</span>
+            <div>
+              <h3 id="statTotal">0</h3>
+              <p>Total Products</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <span class="stat-icon">🌱</span>
+            <div>
+              <h3 id="statSeeds">0</h3>
+              <p>Crop Seeds</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <span class="stat-icon">🐛</span>
+            <div>
+              <h3 id="statInsecticides">0</h3>
+              <p>Insecticides</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <span class="stat-icon">🧪</span>
+            <div>
+              <h3 id="statFungicides">0</h3>
+              <p>Fungicides</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <span class="stat-icon">🍃</span>
+            <div>
+              <h3 id="statBio">0</h3>
+              <p>Bio Products</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Product Management Toolbar -->
+        <div class="management-toolbar">
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="adminSearchInput" placeholder="Search by name, brand (Syngenta, DuPont, Agrico, etc.), crop, or problem..." />
+          </div>
+
+          <div class="filter-controls">
+            <select id="adminCategoryFilter">
+              <option value="all">All Categories</option>
+              <option value="seed">Seeds</option>
+              <option value="insecticide">Insecticides</option>
+              <option value="fungicide">Fungicides</option>
+              <option value="bio">Bio Products</option>
+              <option value="herbicide">Herbicides / Weedicides</option>
+              <option value="fertilizer">Fertilizers / Micronutrients</option>
+            </select>
+
+            <select id="adminStockFilter">
+              <option value="all">All Stock Status</option>
+              <option value="instock">In Stock</option>
+              <option value="outofstock">Out of Stock</option>
+            </select>
+          </div>
+
+          <div class="utility-actions">
+            <button id="exportJsonBtn" class="btn btn-secondary" title="Download backup of products">💾 Backup Data</button>
+            <label class="btn btn-secondary upload-label" title="Restore products from backup JSON">
+              📥 Import Data
+              <input type="file" id="importJsonInput" accept=".json" style="display:none;" />
+            </label>
+            <button id="resetDefaultsBtn" class="btn btn-outline" title="Restore factory products">🔄 Reset Defaults</button>
+          </div>
+        </div>
+
+        <!-- Products Grid Display -->
+        <div class="products-section">
+          <div class="section-title-row">
+            <h2>Product Inventory (<span id="resultsCount">0</span>)</h2>
+            <small>Changes save instantly to the live storefront.</small>
+          </div>
+
+          <div id="adminProductGrid" class="admin-product-grid">
+            <!-- Populated dynamically via admin.js -->
+          </div>
+
+          <div id="noAdminResults" class="no-results hidden">
+            <p>No products match your search or filter.</p>
+            <button class="btn btn-primary" id="clearFiltersBtn">Clear Filters</button>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ==================== TAB 2: FARMER DATABASE & KHATA ==================== -->
+      <section id="tabContentFarmers" class="tab-content hidden">
+        
+        <div class="banner-section">
+          <div class="banner-text">
+            <h1>🌾 Farmer Records & Khata Ledger</h1>
+            <p>Manage farmer profiles, land size, crop advice, and digital purchase passbooks.</p>
+          </div>
+          <div class="banner-buttons">
+            <button id="openAddFarmerModalBtn" class="btn btn-primary btn-lg">➕ Register New Farmer</button>
+          </div>
+        </div>
+
+        <!-- Farmer Stats Row -->
+        <div class="stats-row stats-three">
+          <div class="stat-card">
+            <span class="stat-icon">👨‍🌾</span>
+            <div>
+              <h3 id="statTotalFarmers">0</h3>
+              <p>Registered Farmers</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <span class="stat-icon">📜</span>
+            <div>
+              <h3 id="statTotalTransactions">0</h3>
+              <p>Total Khata Transactions</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <span class="stat-icon">💰</span>
+            <div>
+              <h3 id="statTotalOutstanding">₹0</h3>
+              <p>Total Outstanding Balance</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Farmer Search Toolbar -->
+        <div class="management-toolbar">
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="farmerSearchInput" placeholder="Search farmer by ID (e.g. KIS-1001), Name, Mobile, or Village..." />
+          </div>
+          <div class="utility-actions">
+            <button id="exportFarmersJsonBtn" class="btn btn-secondary">💾 Backup Farmers DB</button>
+          </div>
+        </div>
+
+        <!-- Farmers Grid -->
+        <div class="products-section">
+          <div class="section-title-row">
+            <h2>Farmer Customer Directory (<span id="farmersCount">0</span>)</h2>
+            <small>Click "View Khata" to see transactions or add new purchases.</small>
+          </div>
+
+          <div id="adminFarmerGrid" class="admin-farmer-grid">
+            <!-- Populated dynamically via admin.js -->
+          </div>
+
+          <div id="noFarmerResults" class="no-results hidden">
+            <p>No farmers found matching your search.</p>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ==================== TAB 3: POS INVOICES & BILLING ==================== -->
+      <section id="tabContentInvoices" class="tab-content hidden">
+        
+        <div class="banner-section">
+          <div class="banner-text">
+            <h1>🧾 POS Invoices & Sales Register</h1>
+            <p>Create itemized bills, record cash/UPI/credit payments, and send instant WhatsApp receipts.</p>
+          </div>
+          <div class="banner-buttons">
+            <button id="openCreateInvoiceModalBtn" class="btn btn-primary btn-lg">➕ Create New Bill / Sale</button>
+          </div>
+        </div>
+
+        <!-- Financial Summary Counters -->
+        <div class="stats-row stats-four">
+          <div class="stat-card">
+            <span class="stat-icon">💵</span>
+            <div>
+              <h3 id="invTotalRevenue">₹0</h3>
+              <p>Total Sales Value</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <span class="stat-icon">📥</span>
+            <div>
+              <h3 id="invTotalCollected">₹0</h3>
+              <p>Cash & UPI Collected</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <span class="stat-icon">⏳</span>
+            <div>
+              <h3 id="invTotalDues">₹0</h3>
+              <p>Pending / Khata Dues</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <span class="stat-icon">📋</span>
+            <div>
+              <h3 id="invTotalCount">0</h3>
+              <p>Invoices Generated</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Invoices Toolbar -->
+        <div class="management-toolbar">
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="invoiceSearchInput" placeholder="Search by Invoice # (e.g. INV-2026-001), Farmer Name, or Mobile..." />
+          </div>
+          <div class="utility-actions">
+            <button id="exportInvoicesCsvBtn" class="btn btn-secondary">📊 Export Invoices (Excel CSV)</button>
+          </div>
+        </div>
+
+        <!-- Invoices Table -->
+        <div class="products-section">
+          <div class="section-title-row">
+            <h2>Recent Sales Invoices (<span id="invoicesCount">0</span>)</h2>
+            <small>Click WhatsApp to send instant digital receipt to customer.</small>
+          </div>
+
+          <div class="table-responsive">
+            <table class="khata-table">
+              <thead>
+                <tr>
+                  <th>Invoice #</th>
+                  <th>Date & Time</th>
+                  <th>Customer / Farmer</th>
+                  <th>Items Summary</th>
+                  <th>Bill Total</th>
+                  <th>Paid</th>
+                  <th>Due</th>
+                  <th>Mode</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="invoicesTableBody">
+                <!-- Dynamically populated via admin.js -->
+              </tbody>
+            </table>
+          </div>
+
+          <div id="noInvoiceResults" class="no-results hidden">
+            <p>No invoices found matching your search.</p>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ==================== TAB 4: SEARCH ANALYTICS & DEMAND ==================== -->
+      <section id="tabContentAnalytics" class="tab-content hidden">
+        
+        <div class="banner-section">
+          <div class="banner-text">
+            <h1>🔍 Store Search Analytics & Demand Trends</h1>
+            <p>Real-time log of what crops, diseases, and medicines local farmers are searching for on your website.</p>
+          </div>
+          <div class="banner-buttons">
+            <button id="clearSearchLogsBtn" class="btn btn-danger">🗑️ Clear Search History</button>
+          </div>
+        </div>
+
+        <div class="analytics-grid">
+          <!-- Top Keywords Card -->
+          <div class="analytics-card">
+            <h3>🔥 Top 10 Most Searched Terms</h3>
+            <div id="topKeywordsList" class="top-keywords-list">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- Recent Search Log Table -->
+          <div class="analytics-card full-span">
+            <div class="panel-header">
+              <h3>🕒 Recent Search Activity Log</h3>
+              <small id="searchLogCount">0 searches</small>
+            </div>
+            <div class="table-responsive">
+              <table class="khata-table">
+                <thead>
+                  <tr>
+                    <th>Timestamp</th>
+                    <th>Search Term</th>
+                    <th>Category Filter</th>
+                    <th>Results Found</th>
+                  </tr>
+                </thead>
+                <tbody id="searchLogTableBody">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ==================== TAB 5: MASTER DATABASE & BACKUP CENTER ==================== -->
+      <section id="tabContentDatabase" class="tab-content hidden">
+        
+        <div class="banner-section">
+          <div class="banner-text">
+            <h1>🗄️ Master Database Management & Backup Center</h1>
+            <p>Single control center for all 8 database collections, Excel CSV exports, and 1-click JSON backup/restore.</p>
+          </div>
+          <div class="banner-buttons">
+            <button id="masterBackupJsonBtn" class="btn btn-primary btn-lg">💾 Download Master JSON Backup</button>
+          </div>
+        </div>
+
+        <!-- Database Health & Record Tiles -->
+        <div class="db-overview-grid">
+          <div class="db-tile">
+            <span class="db-tile-icon">📦</span>
+            <div>
+              <strong id="dbCountProducts">0</strong>
+              <small>Products in Catalog</small>
+            </div>
+            <button class="btn btn-outline db-quick-csv" data-csv="products">CSV</button>
+          </div>
+
+          <div class="db-tile">
+            <span class="db-tile-icon">👨‍🌾</span>
+            <div>
+              <strong id="dbCountFarmers">0</strong>
+              <small>Registered Farmers</small>
+            </div>
+            <button class="btn btn-outline db-quick-csv" data-csv="farmers">CSV</button>
+          </div>
+
+          <div class="db-tile">
+            <span class="db-tile-icon">🧾</span>
+            <div>
+              <strong id="dbCountInvoices">0</strong>
+              <small>Sales Invoices</small>
+            </div>
+            <button class="btn btn-outline db-quick-csv" data-csv="invoices">CSV</button>
+          </div>
+
+          <div class="db-tile">
+            <span class="db-tile-icon">🤖</span>
+            <div>
+              <strong id="dbCountAiScans">0</strong>
+              <small>AI Disease Scans</small>
+            </div>
+          </div>
+
+          <div class="db-tile">
+            <span class="db-tile-icon">🔍</span>
+            <div>
+              <strong id="dbCountSearches">0</strong>
+              <small>Search Demand Logs</small>
+            </div>
+          </div>
+
+          <div class="db-tile">
+            <span class="db-tile-icon">💬</span>
+            <div>
+              <strong id="dbCountEnquiries">0</strong>
+              <small>Customer Enquiries</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Backup & Migration Actions -->
+        <div class="db-actions-card">
+          <h3>📦 Master Database Operations</h3>
+          <p>Export your full store records for accounting, or upload a previously saved backup file to restore everything.</p>
+          
+          <div class="db-actions-row">
+            <button id="btnExportFullDb" class="btn btn-primary">
+              💾 1-Click Complete Database Backup (.JSON)
+            </button>
+            <label class="btn btn-secondary upload-label">
+              📥 Restore Database from JSON
+              <input type="file" id="importMasterDbInput" accept=".json" style="display:none;" />
+            </label>
+            <button id="btnExportInvoicesCsv" class="btn btn-outline">
+              📊 Export Sales Invoices (.CSV for Excel)
+            </button>
+            <button id="btnExportFarmersCsv" class="btn btn-outline">
+              👥 Export Farmers Directory (.CSV)
+            </button>
+          </div>
+        </div>
+
+        <!-- Raw Table Explorer -->
+        <div class="db-table-explorer">
+          <div class="explorer-header">
+            <h3>🔍 Live Database Collection Browser</h3>
+            <div class="explorer-select-group">
+              <label for="dbTableSelect">Select Collection:</label>
+              <select id="dbTableSelect">
+                <option value="invoices">🧾 Sales Invoices (Billing)</option>
+                <option value="farmers">👨‍🌾 Farmers Directory & Khata</option>
+                <option value="products">📦 Products Inventory</option>
+                <option value="aiScans">🤖 AI Disease Scan Logs</option>
+                <option value="enquiries">💬 Customer Enquiries</option>
+                <option value="settings">⚙️ Store Master Settings</option>
+              </select>
+            </div>
+          </div>
+
+          <pre id="rawJsonViewer" class="raw-json-viewer">Loading database collection...</pre>
+        </div>
+
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- CREATE POS INVOICE MODAL -->
+  <div id="createInvoiceModal" class="modal-backdrop hidden">
+    <div class="modal-card" style="width:min(850px, 100%);">
+      <div class="modal-header">
+        <h2>🧾 Create POS Sale / Retail Invoice</h2>
+        <button id="closeInvoiceModalBtn" class="close-btn">&times;</button>
+      </div>
+
+      <form id="invoiceForm" class="modal-form">
+        <!-- Customer Info -->
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="invSelectFarmer">Select Registered Farmer (Or Walk-in)</label>
+            <select id="invSelectFarmer">
+              <option value="WALK-IN">-- Walk-in Customer (General) --</option>
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="invCustomerName">Customer Name *</label>
+            <input type="text" id="invCustomerName" required placeholder="Farmer or Customer Name" />
+          </div>
+          <div class="form-group">
+            <label for="invCustomerMobile">Mobile Number</label>
+            <input type="tel" id="invCustomerMobile" placeholder="10-digit mobile" />
+          </div>
+          <div class="form-group">
+            <label for="invCustomerVillage">Village / Area</label>
+            <input type="text" id="invCustomerVillage" placeholder="Village Behra Sadat / Morna" />
+          </div>
+        </div>
+
+        <!-- Itemized Products Section -->
+        <div class="invoice-items-section">
+          <div class="section-title-row" style="margin-bottom:8px;">
+            <h4>📦 Bill Items & Agrochemicals</h4>
+            <button type="button" id="addInvoiceRowBtn" class="btn btn-secondary" style="padding:6px 12px; font-size:12px;">➕ Add Item</button>
+          </div>
+
+          <div class="table-responsive">
+            <table class="khata-table" id="invoiceItemsTable">
+              <thead>
+                <tr>
+                  <th>Product / Medicine</th>
+                  <th style="width:100px;">Qty</th>
+                  <th style="width:120px;">Rate (₹)</th>
+                  <th style="width:120px;">Total (₹)</th>
+                  <th style="width:50px;"></th>
+                </tr>
+              </thead>
+              <tbody id="invoiceItemsBody">
+                <!-- Populated via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Bill Calculation Summary -->
+        <div class="invoice-calc-grid">
+          <div class="form-group">
+            <label for="invPaymentMode">Payment Method</label>
+            <select id="invPaymentMode">
+              <option value="Cash">💵 Cash</option>
+              <option value="UPI">📱 UPI / QR Code</option>
+              <option value="Khata Credit">📜 Khata Credit (उधारी)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="invPaidAmount">Amount Paid (₹) *</label>
+            <input type="number" id="invPaidAmount" min="0" required placeholder="₹ 0" />
+          </div>
+
+          <div class="invoice-totals-box">
+            <div><span>Subtotal:</span> <strong id="invSubtotalLabel">₹0</strong></div>
+            <div><span>Discount:</span> <input type="number" id="invDiscount" value="0" min="0" style="width:80px; padding:4px 8px; font-size:13px;" /></div>
+            <div class="grand-total-row"><span>Grand Total:</span> <strong id="invGrandTotalLabel">₹0</strong></div>
+            <div class="due-row"><span>Balance Due:</span> <strong id="invBalanceDueLabel">₹0</strong></div>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top:12px;">
+          <label for="invNotes">Spray / Advisory Note</label>
+          <input type="text" id="invNotes" placeholder="e.g. 100ml Incipio + 500ml Isabion for sugarcane early borer" />
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" id="cancelInvoiceModalBtn" class="btn btn-outline">Cancel</button>
+          <button type="submit" class="btn btn-primary">💾 Save Invoice & Generate Receipt</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- VIEW / PRINT INVOICE MODAL -->
+  <div id="invoiceViewModal" class="modal-backdrop hidden">
+    <div class="modal-card modal-sm" style="width:min(500px, 100%);">
+      <div class="modal-header">
+        <h2>🧾 Invoice Receipt</h2>
+        <button id="closeInvoiceViewModalBtn" class="close-btn">&times;</button>
+      </div>
+
+      <div id="printableInvoiceContent" class="invoice-receipt-paper">
+        <div class="receipt-header">
+          <h3>M/S KISSAN</h3>
+          <small>Pesticides & Seed Store • Behra Sadat, Morna</small>
+          <small>Proprietor: Mr. Mahipal Singh • Mob: 9760153116</small>
+          <div class="receipt-divider"></div>
+        </div>
+
+        <div class="receipt-meta">
+          <div><b>Invoice #:</b> <span id="rcptInvId">INV-2026-001</span></div>
+          <div><b>Date:</b> <span id="rcptDate">2026-08-25</span></div>
+          <div><b>Customer:</b> <span id="rcptName">Ramesh Kumar</span></div>
+          <div><b>Village:</b> <span id="rcptVillage">Behra Sadat</span></div>
+          <div class="receipt-divider"></div>
+        </div>
+
+        <div id="rcptItemsList" class="receipt-items">
+          <!-- Items populated dynamically -->
+        </div>
+
+        <div class="receipt-divider"></div>
+        <div class="receipt-totals">
+          <div><span>Grand Total:</span> <b id="rcptTotal">₹0</b></div>
+          <div><span>Amount Paid:</span> <b id="rcptPaid" style="color:var(--green);">₹0</b></div>
+          <div><span>Balance Due:</span> <b id="rcptDue" style="color:var(--danger);">₹0</b></div>
+          <div><span>Payment Mode:</span> <span id="rcptMode">Cash</span></div>
+        </div>
+
+        <div class="receipt-footer">
+          <small>Thank you for choosing M/S KISSAN!</small>
+          <small>100% Genuine Certified Agri Inputs</small>
+        </div>
+      </div>
+
+      <div class="modal-actions" style="padding:14px 20px;">
+        <button type="button" id="sendRcptWaBtn" class="btn btn-whatsapp">💬 Send on WhatsApp</button>
+        <button type="button" id="printRcptBtn" class="btn btn-secondary">🖨️ Print Slip</button>
+        <button type="button" id="closeRcptBtn" class="btn btn-outline">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD / EDIT PRODUCT MODAL -->
+  <div id="productModal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 id="modalTitle">Add New Product</h2>
+        <button id="closeModalBtn" class="close-btn">&times;</button>
+      </div>
+
+      <form id="productForm" class="modal-form">
+        <input type="hidden" id="editProductId" />
+
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label for="prodName">Product Name *</label>
+            <input type="text" id="prodName" required placeholder="e.g. Miravis Duo, Super 303 Wheat Seeds, Incipio" />
+          </div>
+
+          <div class="form-group">
+            <label for="prodBrand">Brand / Manufacturer</label>
+            <input type="text" id="prodBrand" placeholder="e.g. Syngenta, DuPont, Agrico, Triveni, Coromandel, Safex, Samradhi" />
+          </div>
+
+          <div class="form-group">
+            <label for="prodCategory">Category *</label>
+            <select id="prodCategory" required>
+              <option value="fungicide">Fungicide</option>
+              <option value="insecticide">Insecticide</option>
+              <option value="seed">Seeds</option>
+              <option value="bio">Bio Products / Stimulant</option>
+              <option value="herbicide">Herbicide / Weedicide</option>
+              <option value="fertilizer">Fertilizer / Nutrients</option>
+              <option value="all">General Agri Input</option>
+            </select>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="prodCrops">Target Crops *</label>
+            <input type="text" id="prodCrops" required placeholder="e.g. Wheat, Paddy, Sugarcane, Tomato, Chilli" />
+          </div>
+
+          <div class="form-group full-width">
+            <label for="prodTarget">Target Pests / Diseases / Benefits *</label>
+            <textarea id="prodTarget" rows="2" required placeholder="e.g. Stem borer, leaf blast, powdery mildew, higher tillering, etc."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="prodDosage">Recommended Dosage</label>
+            <input type="text" id="prodDosage" placeholder="e.g. 1-1.5 ml / Litre or 100 ml / Acre" />
+          </div>
+
+          <div class="form-group">
+            <label for="prodPackSizes">Available Pack Sizes</label>
+            <input type="text" id="prodPackSizes" placeholder="e.g. 100ml, 250ml, 500ml, 1L, 40kg Bag" />
+          </div>
+
+          <div class="form-group">
+            <label for="prodIcon">Display Icon / Emoji</label>
+            <select id="prodIcon">
+              <option value="🌱">🌱 Seed / Sprout</option>
+              <option value="🌾">🌾 Wheat / Grain</option>
+              <option value="🍅">🍅 Tomato / Vegetable</option>
+              <option value="🌶️">🌶️ Chilli / Spice</option>
+              <option value="🐛">🐛 Insect / Pest Control</option>
+              <option value="🧪">🧪 Chemical / Protection</option>
+              <option value="🍃">🍃 Bio Leaf / Organic</option>
+              <option value="💧">💧 Liquid / Stress Care</option>
+              <option value="🌽">🌽 Maize / Corn</option>
+              <option value="🚜">🚜 Farm / General Input</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="prodImageUpload">Product Photo (Optional)</label>
+            <input type="file" id="prodImageUpload" accept="image/*" />
+            <input type="hidden" id="prodImageBase64" />
+          </div>
+
+          <div class="form-group full-width checkbox-group">
+            <label class="switch-label">
+              <input type="checkbox" id="prodInStock" checked />
+              <span>Available in Stock</span>
+            </label>
+            <label class="switch-label">
+              <input type="checkbox" id="prodFeatured" checked />
+              <span>Show on Featured Homepage</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" id="cancelModalBtn" class="btn btn-outline">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="saveProductBtn">Save Product</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ADD / EDIT FARMER MODAL -->
+  <div id="farmerModal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 id="farmerModalTitle">Register New Farmer</h2>
+        <button id="closeFarmerModalBtn" class="close-btn">&times;</button>
+      </div>
+
+      <form id="farmerForm" class="modal-form">
+        <input type="hidden" id="editFarmerId" />
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="farmerNameInput">Farmer Full Name *</label>
+            <input type="text" id="farmerNameInput" required placeholder="e.g. Ramesh Kumar" />
+          </div>
+          <div class="form-group">
+            <label for="farmerMobileInput">Mobile / WhatsApp *</label>
+            <input type="tel" id="farmerMobileInput" required maxlength="10" placeholder="10-digit mobile" />
+          </div>
+          <div class="form-group">
+            <label for="farmerVillageInput">Village / Area *</label>
+            <input type="text" id="farmerVillageInput" required placeholder="e.g. Village Behra Sadat / Morna" />
+          </div>
+          <div class="form-group">
+            <label for="farmerLandInput">Land Area</label>
+            <input type="text" id="farmerLandInput" placeholder="e.g. 15 Bigha / 3 Acres" />
+          </div>
+          <div class="form-group full-width">
+            <label for="farmerCropsInput">Primary Crops *</label>
+            <input type="text" id="farmerCropsInput" required placeholder="e.g. Sugarcane, Wheat, Paddy, Tomato" />
+          </div>
+          <div class="form-group full-width">
+            <label for="farmerNotesInput">Advisory / Shop Notes</label>
+            <textarea id="farmerNotesInput" rows="2" placeholder="Special requirements, soil conditions, or crop advice history..."></textarea>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" id="cancelFarmerModalBtn" class="btn btn-outline">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Farmer Profile</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ADD KHATA TRANSACTION MODAL -->
+  <div id="khataModal" class="modal-backdrop hidden">
+    <div class="modal-card modal-sm">
+      <div class="modal-header">
+        <h2>Add Purchase / Khata Entry</h2>
+        <button id="closeKhataModalBtn" class="close-btn">&times;</button>
+      </div>
+
+      <form id="khataEntryForm" class="modal-form">
+        <input type="hidden" id="khataFarmerId" />
+        <p id="khataFarmerNameHeader" style="font-weight:700; color:var(--green); margin-bottom:12px;"></p>
+
+        <div class="form-group">
+          <label for="txDate">Transaction Date *</label>
+          <input type="date" id="txDate" required />
+        </div>
+        <div class="form-group">
+          <label for="txProduct">Product / Medicine Name *</label>
+          <input type="text" id="txProduct" required placeholder="e.g. Miravis Duo (250ml) + Isabion" />
+        </div>
+        <div class="form-group">
+          <label for="txQty">Quantity / Pack Size</label>
+          <input type="text" id="txQty" placeholder="e.g. 2 Bottles / 1 Bag" />
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="txAmount">Total Bill (₹) *</label>
+            <input type="number" id="txAmount" min="0" required placeholder="₹ 1500" />
+          </div>
+          <div class="form-group">
+            <label for="txPaid">Amount Paid (₹) *</label>
+            <input type="number" id="txPaid" min="0" required placeholder="₹ 1000" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="txNotes">Spray / Advisory Note</label>
+          <input type="text" id="txNotes" placeholder="e.g. 2ml/L for leaf blast, spray in morning" />
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" id="cancelKhataModalBtn" class="btn btn-outline">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save to Khata</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- VIEW FARMER KHATA STATEMENT MODAL -->
+  <div id="statementModal" class="modal-backdrop hidden">
+    <div class="modal-card" style="width:min(780px, 100%);">
+      <div class="modal-header">
+        <div>
+          <h2 id="statementFarmerName">Farmer Passbook</h2>
+          <small id="statementFarmerMeta">ID & Location</small>
+        </div>
+        <button id="closeStatementModalBtn" class="close-btn">&times;</button>
+      </div>
+
+      <div style="padding:20px 24px;">
+        <div class="khata-stats" style="margin-bottom:18px;">
+          <div class="khata-stat-box">
+            <small>Total Purchases</small>
+            <strong id="stmtTotalPurchases">₹0</strong>
+          </div>
+          <div class="khata-stat-box balance-box">
+            <small>Current Outstanding Balance</small>
+            <strong id="stmtCurrentBalance">₹0</strong>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="khata-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Item / Product</th>
+                <th>Qty</th>
+                <th>Amount</th>
+                <th>Paid</th>
+                <th>Balance</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody id="stmtTableBody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+        <div id="noStmtMsg" class="no-records hidden">No transaction records found for this farmer.</div>
+
+        <div class="modal-actions" style="margin-top:18px;">
+          <button type="button" id="sendWaKhataBtn" class="btn btn-whatsapp">💬 Send Khata Slip on WhatsApp</button>
+          <button type="button" id="closeStatementBtn" class="btn btn-outline">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHANGE PIN MODAL -->
+  <div id="pinModal" class="modal-backdrop hidden">
+    <div class="modal-card modal-sm">
+      <div class="modal-header">
+        <h2>Change Security PIN</h2>
+        <button id="closePinModalBtn" class="close-btn">&times;</button>
+      </div>
+      <form id="changePinForm" class="modal-form">
+        <div class="form-group">
+          <label for="currentPinInput">Current PIN</label>
+          <input type="password" id="currentPinInput" required maxlength="12" />
+        </div>
+        <div class="form-group">
+          <label for="newPinInput">New PIN</label>
+          <input type="password" id="newPinInput" required maxlength="12" placeholder="Enter new PIN" />
+        </div>
+        <div class="modal-actions">
+          <button type="button" id="cancelPinBtn" class="btn btn-outline">Cancel</button>
+          <button type="submit" class="btn btn-primary">Update PIN</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Load Master DB and Admin Scripts -->
+  <script src="kissan-master-db.js"></script>
+  <script src="products-data.js"></script>
+  <script src="farmer-db.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
