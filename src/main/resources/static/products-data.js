@@ -4,7 +4,7 @@ const STORAGE_KEY = 'kissan_products_catalog_v2';
 const ADMIN_PIN_HASH_KEY = 'kissan_admin_pin_hash';
 const SALT = 'kissan_salt_2026_';
 
-// Salted SHA-256 hash for default PIN (908442)
+// Salted SHA-256 hash for admin security verification
 const DEFAULT_PIN_HASH = '95bf354170abc2e982d3ce6a35e98ca0e76a4118ca2d2dc9702dad53782f75e9';
 
 // Cryptographic SHA-256 Hashing Function

@@ -78,7 +78,7 @@
         });
         if (res.ok) return await res.json();
       } catch (e) {}
-      return window.KISSAN_DB ? window.KISSAN_DB.otp.generate(phoneOrId) : { success: true, code: '112233' };
+      return window.KISSAN_DB ? window.KISSAN_DB.otp.generate(phoneOrId) : { success: false, message: 'OTP service unavailable' };
     },
 
     async verifyOTP(phoneOrId, code) {
@@ -90,7 +90,7 @@
         });
         if (res.ok) return await res.json();
       } catch (e) {}
-      return window.KISSAN_DB ? window.KISSAN_DB.otp.verify(phoneOrId, code) : { success: true };
+      return window.KISSAN_DB ? window.KISSAN_DB.otp.verify(phoneOrId, code) : { success: false, message: 'Verification failed' };
     },
 
     // Invoices REST API

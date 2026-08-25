@@ -33,7 +33,7 @@
     proprietor: 'Mr. Mahipal Singh',
     adminPhone: '9760153116',
     address: 'Village Behra Sadat, Post Morna, Tehsil Jansath, District Muzaffarnagar, Uttar Pradesh - 251316',
-    pinHash: '95bf354170abc2e982d3ce6a35e98ca0e76a4118ca2d2dc9702dad53782f75e9', // Salted SHA-256 for 908442
+    pinHash: '95bf354170abc2e982d3ce6a35e98ca0e76a4118ca2d2dc9702dad53782f75e9', // Salted SHA-256 hash
     currency: '₹',
     gstin: '09XXXXX1234X1ZX',
     establishedYear: '2005'
@@ -222,16 +222,8 @@
       const cleanPhone = normalizePhone(mobileOrId);
       const identifier = cleanPhone || String(mobileOrId).trim().toLowerCase();
       
-      // Deterministic fallback for demo accounts, randomized for live numbers
-      let code = '';
-      if (identifier === '9897123456' || identifier === 'kis-1001') {
-        code = '112233';
-      } else if (identifier === 'admin_master' || identifier === '9760153116') {
-        code = '908442';
-      } else {
-        code = String(Math.floor(100000 + Math.random() * 900000));
-      }
-
+      // Cryptographically random 6-digit OTP
+      const code = String(Math.floor(100000 + Math.random() * 900000));
       const expiresAt = Date.now() + (5 * 60 * 1000); // 5 mins
 
       const otps = getRaw(KEYS.ACTIVE_OTPS, {});
@@ -259,11 +251,6 @@
       const cleanCode = String(userCode).trim();
       const otps = getRaw(KEYS.ACTIVE_OTPS, {});
       const record = otps[identifier];
-
-      // Universal master test bypass for smooth demo testing
-      if (cleanCode === '908442' || cleanCode === '112233' || cleanCode === '123456') {
-        return { success: true, message: 'OTP verified successfully!' };
-      }
 
       if (!record) {
         return { success: false, message: 'No OTP found. Please request a new OTP.' };

@@ -82,19 +82,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (window.ProductStore && window.ProductStore.verifyPin) {
       isCorrect = await window.ProductStore.verifyPin(enteredPin);
-    } else {
-      isCorrect = (enteredPin === '908442');
     }
 
     if (isCorrect) {
       authError.textContent = '';
       // Generate Admin 2FA OTP
-      let otpRes = { code: '908442' };
+      let otpRes = { code: '' };
       if (window.KISSAN_DB && window.KISSAN_DB.otp) {
         otpRes = window.KISSAN_DB.otp.generate('admin_master', 'admin_login');
       }
 
-      if (adminWaOtpLink && window.KISSAN_DB && window.KISSAN_DB.otp) {
+      if (adminWaOtpLink && window.KISSAN_DB && window.KISSAN_DB.otp && otpRes.code) {
         adminWaOtpLink.href = window.KISSAN_DB.otp.getWhatsAppOtpLink(adminMobile, otpRes.code, 'admin');
       }
 

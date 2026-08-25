@@ -8,12 +8,18 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/auth")
 @CrossOrigin(origins = "*")
 public class AuthController {
+
+    private static final String SALT = "kissan_salt_2026_";
+    private static final String DEFAULT_PIN_HASH = "95bf354170abc2e982d3ce6a35e98ca0e76a4118ca2d2dc9702dad53782f75e9";
 
     @Autowired
     private OTPService otpService;
@@ -54,9 +60,26 @@ public class AuthController {
     @PostMapping("/admin/verify-pin")
     public ResponseEntity<?> verifyAdminPin(@RequestBody Map<String, String> body) {
         String pin = body.get("pin");
-        if ("908442".equals(pin)) {
+        if (pin != null && isPinValid(pin)) {
             return ResponseEntity.ok(Map.of("success", true, "role", "ADMIN"));
         }
         return ResponseEntity.status(401).body(Map.of("success", false, "message", "Invalid Admin PIN."));
+    }
+
+    private boolean isPinValid(String pin) {
+        if (pin == null || pin.trim().isEmpty()) return false;
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hashBytes = digest.digest((SALT + pin.trim()).getBytes(StandardCharsets.UTF_8));
+            StringBuilder hex = new StringBuilder();
+            for (byte b : hashBytes) {
+                String h = Integer.toHexString(0xff & b);
+                if (h.length() == 1) hex.append('0');
+                hex.append(h);
+            }
+            return DEFAULT_PIN_HASH.equalsIgnoreCase(hex.toString());
+        } catch (NoSuchAlgorithmException e) {
+            return false;
+        }
     }
 }

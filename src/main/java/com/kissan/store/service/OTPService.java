@@ -30,16 +30,8 @@ public class OTPService {
 
     public String generateOTP(String phoneOrId) {
         String clean = phoneOrId.trim().toLowerCase();
-        String code;
-
-        // Deterministic for standard demo/owner numbers
-        if (clean.endsWith("9897123456") || "kis-1001".equals(clean)) {
-            code = "112233";
-        } else if (clean.endsWith("9760153116") || "admin_master".equals(clean)) {
-            code = "908442";
-        } else {
-            code = String.format("%06d", random.nextInt(900000) + 100000);
-        }
+        // Cryptographically random 6-digit OTP
+        String code = String.format("%06d", random.nextInt(900000) + 100000);
 
         long expiresAt = System.currentTimeMillis() + (5 * 60 * 1000); // 5 minutes
         activeOtps.put(clean, new OTPRecord(code, expiresAt));
@@ -49,11 +41,6 @@ public class OTPService {
     public boolean verifyOTP(String phoneOrId, String submittedCode) {
         if (submittedCode == null) return false;
         String cleanCode = submittedCode.trim();
-
-        // Universal master test bypasses
-        if ("908442".equals(cleanCode) || "112233".equals(cleanCode) || "123456".equals(cleanCode)) {
-            return true;
-        }
 
         String clean = phoneOrId.trim().toLowerCase();
         OTPRecord record = activeOtps.get(clean);

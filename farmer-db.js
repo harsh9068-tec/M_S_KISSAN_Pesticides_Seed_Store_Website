@@ -206,7 +206,7 @@ function loginFarmer(mobileOrId, pin) {
 
   const farmer = farmers.find(f => 
     (f.mobile === cleanInput || f.id.toLowerCase() === cleanInput) &&
-    (f.pin === cleanPin || cleanPin === '908442' || !f.pin)
+    (f.pin === cleanPin || (!f.pin && cleanPin === '1234'))
   );
 
   if (farmer) {
