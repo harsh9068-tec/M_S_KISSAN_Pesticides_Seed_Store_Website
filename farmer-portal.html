@@ -43,22 +43,52 @@
           <button class="auth-tab" id="tabRegisterBtn">नया किसान पंजीकरण (Register)</button>
         </div>
 
-        <!-- Login Form -->
+        <!-- OTP-Based Login Form -->
         <form id="farmerLoginForm" class="portal-form">
-          <div class="form-group">
-            <label for="loginMobileOrId">मोबाइल नंबर या किसान ID *</label>
-            <input type="text" id="loginMobileOrId" placeholder="उदा. 9897123456 या KIS-1001" required />
+          <!-- Step 1: Mobile / ID Input -->
+          <div id="otpStep1">
+            <div class="form-group">
+              <label for="loginMobileOrId">मोबाइल नंबर या किसान आईडी (Mobile or Farmer ID) *</label>
+              <input type="tel" id="loginMobileOrId" maxlength="10" placeholder="उदा. 9897123456" required autofocus />
+            </div>
+            <button type="button" id="getOtpBtn" class="btn btn-primary btn-full">📩 ओटीपी पाएं (Get OTP) →</button>
+            <div class="demo-hints" style="margin-top:12px;">
+              <small>💡 <b>परीक्षण (Demo Account):</b> मोबाइल: <code>9897123456</code> (या अपना 10-अंकों का मोबाइल नंबर दर्ज करें)</small>
+            </div>
           </div>
-          <div class="form-group">
-            <label for="loginPin">4-अंकों का पिन (PIN) *</label>
-            <input type="password" id="loginPin" maxlength="6" placeholder="अपना पिन दर्ज करें (उदा. 1122)" required />
-          </div>
-          <button type="submit" class="btn btn-primary btn-full">पोर्टल खोलें (Login) →</button>
-          <p id="loginError" class="form-error"></p>
 
-          <div class="demo-hints">
-            <small>💡 <b>परीक्षण के लिए (Demo Account):</b> मोबाइल: <code>9897123456</code> | पिन: <code>1122</code></small>
+          <!-- Step 2: Enter 6-Digit OTP (Hidden initially) -->
+          <div id="otpStep2" class="hidden">
+            <div class="otp-banner-box">
+              <span>📩</span>
+              <div>
+                <strong>ओटीपी भेजा गया (OTP Sent)</strong>
+                <small id="otpSentMobileLabel">9897123456</small>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top:14px;">
+              <label for="loginOtpInput">6-अंकों का ओटीपी दर्ज करें (Enter 6-Digit OTP) *</label>
+              <input type="text" id="loginOtpInput" maxlength="6" placeholder="• • • • • •" style="letter-spacing:6px; font-size:22px; text-align:center; font-weight:800;" />
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-full">सत्यापित करें व लॉगिन करें (Verify & Login) →</button>
+
+            <div class="otp-actions-row">
+              <a id="openWaOtpBtn" href="#" target="_blank" class="btn btn-whatsapp" style="padding:6px 12px; font-size:12px;">
+                💬 व्हाट्सएप पर ओटीपी देखें
+              </a>
+              <button type="button" id="resendOtpBtn" class="btn btn-outline" style="padding:6px 12px; font-size:12px;" disabled>
+                ⏱️ पुनः भेजें (<span id="resendCountdown">30</span>s)
+              </button>
+            </div>
+            
+            <button type="button" id="changeMobileBtn" style="display:block; margin:12px auto 0; font-size:12px; color:var(--muted); background:none; border:none; cursor:pointer; text-decoration:underline;">
+              ← मोबाइल नंबर बदलें (Change Mobile)
+            </button>
           </div>
+
+          <p id="loginError" class="form-error"></p>
         </form>
 
         <!-- Register Form (Hidden by default) -->
@@ -83,10 +113,6 @@
             <div class="form-group full-width">
               <label for="regCrops">मुख्य फसलें *</label>
               <input type="text" id="regCrops" placeholder="उदा. गन्ना, गेहूं, धान, सरसों, टमाटर" required />
-            </div>
-            <div class="form-group full-width">
-              <label for="regPin">सुरक्षा पिन बनाएं (4-अंक) *</label>
-              <input type="password" id="regPin" maxlength="6" placeholder="लॉगिन के लिए 4 अंकों का पिन" required />
             </div>
           </div>
           <button type="submit" class="btn btn-primary btn-full">पंजीकरण करें (Register Now) →</button>

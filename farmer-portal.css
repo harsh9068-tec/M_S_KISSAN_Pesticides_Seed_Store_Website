@@ -213,6 +213,40 @@ button, input, select, textarea {
   gap: 16px;
 }
 
+.otp-banner-box {
+  background: #edf7ec;
+  border: 1px solid #c2e2be;
+  border-radius: 12px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.otp-banner-box span {
+  font-size: 22px;
+}
+
+.otp-banner-box strong {
+  display: block;
+  font-size: 13px;
+  color: var(--green);
+}
+
+.otp-banner-box small {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.otp-actions-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

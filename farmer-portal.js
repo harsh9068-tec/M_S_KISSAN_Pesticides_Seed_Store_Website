@@ -1,17 +1,32 @@
-// Farmer Portal Logic & Interactive Passbook
+// ============================================================================
+// M/S KISSAN - FARMER PORTAL & OTP AUTHENTICATION JAVASCRIPT
+// Multi-Device Cloud Sync & Digital Passbook
+// ============================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
   const authSection = document.getElementById('authSection');
   const dashboardSection = document.getElementById('dashboardSection');
   const farmerLogoutBtn = document.getElementById('farmerLogoutBtn');
 
-  // Tabs
+  // Tabs & Forms
   const tabLoginBtn = document.getElementById('tabLoginBtn');
   const tabRegisterBtn = document.getElementById('tabRegisterBtn');
   const farmerLoginForm = document.getElementById('farmerLoginForm');
   const farmerRegisterForm = document.getElementById('farmerRegisterForm');
   const loginError = document.getElementById('loginError');
   const registerError = document.getElementById('registerError');
+
+  // OTP Elements
+  const otpStep1 = document.getElementById('otpStep1');
+  const otpStep2 = document.getElementById('otpStep2');
+  const loginMobileOrId = document.getElementById('loginMobileOrId');
+  const loginOtpInput = document.getElementById('loginOtpInput');
+  const getOtpBtn = document.getElementById('getOtpBtn');
+  const otpSentMobileLabel = document.getElementById('otpSentMobileLabel');
+  const openWaOtpBtn = document.getElementById('openWaOtpBtn');
+  const resendOtpBtn = document.getElementById('resendOtpBtn');
+  const resendCountdown = document.getElementById('resendCountdown');
+  const changeMobileBtn = document.getElementById('changeMobileBtn');
 
   // Dashboard Elements
   const farmerWelcomeName = document.getElementById('farmerWelcomeName');
@@ -29,8 +44,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const directWaBtn = document.getElementById('directWaBtn');
 
   const waNumber = '919760153116';
+  let activeMobileForOtp = '';
+  let countdownTimer = null;
 
-  // Toggle Tab
+  // Toggle Login / Register Tabs
   tabLoginBtn?.addEventListener('click', () => {
     tabLoginBtn.classList.add('active');
     tabRegisterBtn.classList.remove('active');
@@ -45,22 +62,103 @@ document.addEventListener('DOMContentLoaded', () => {
     farmerLoginForm.classList.add('hidden');
   });
 
-  // Login Form Submit
-  farmerLoginForm?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const mobileOrId = document.getElementById('loginMobileOrId').value.trim();
-    const pin = document.getElementById('loginPin').value.trim();
+  // ==================== OTP LOGIN STEP 1: REQUEST OTP ====================
+  function startResendTimer() {
+    let timeLeft = 30;
+    if (resendOtpBtn) resendOtpBtn.disabled = true;
+    if (resendCountdown) resendCountdown.textContent = timeLeft;
 
-    const res = window.FarmerDB.loginFarmer(mobileOrId, pin);
-    if (res.success) {
-      loginError.textContent = '';
-      checkFarmerAuth();
-    } else {
-      loginError.textContent = res.message || 'लॉगिन असफल। सही मोबाइल/ID और पिन दर्ज करें।';
+    clearInterval(countdownTimer);
+    countdownTimer = setInterval(() => {
+      timeLeft--;
+      if (resendCountdown) resendCountdown.textContent = timeLeft;
+
+      if (timeLeft <= 0) {
+        clearInterval(countdownTimer);
+        if (resendOtpBtn) {
+          resendOtpBtn.disabled = false;
+          resendOtpBtn.textContent = '🔄 पुनः ओटीपी भेजें (Resend OTP)';
+        }
+      }
+    }, 1000);
+  }
+
+  function handleSendOtp() {
+    const rawVal = loginMobileOrId.value.trim();
+    if (!rawVal || rawVal.length < 4) {
+      loginError.textContent = 'कृपया 10 अंकों का मोबाइल नंबर या किसान ID दर्ज करें।';
+      return;
+    }
+
+    activeMobileForOtp = rawVal;
+    loginError.textContent = '';
+
+    // Generate 6-digit OTP via Master DB engine
+    let otpRes = { code: '123456' };
+    if (window.KISSAN_DB && window.KISSAN_DB.otp) {
+      otpRes = window.KISSAN_DB.otp.generate(activeMobileForOtp, 'farmer_login');
+    }
+
+    // Update UI to Step 2
+    otpSentMobileLabel.textContent = activeMobileForOtp;
+    otpStep1.classList.add('hidden');
+    otpStep2.classList.remove('hidden');
+    loginOtpInput.value = '';
+    loginOtpInput.focus();
+
+    // Set WhatsApp OTP delivery link
+    if (openWaOtpBtn && window.KISSAN_DB && window.KISSAN_DB.otp) {
+      openWaOtpBtn.href = window.KISSAN_DB.otp.getWhatsAppOtpLink(activeMobileForOtp, otpRes.code, 'farmer');
+    }
+
+    startResendTimer();
+  }
+
+  getOtpBtn?.addEventListener('click', handleSendOtp);
+
+  loginMobileOrId?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSendOtp();
     }
   });
 
-  // Register Form Submit
+  resendOtpBtn?.addEventListener('click', () => {
+    handleSendOtp();
+  });
+
+  changeMobileBtn?.addEventListener('click', () => {
+    clearInterval(countdownTimer);
+    otpStep2.classList.add('hidden');
+    otpStep1.classList.remove('hidden');
+    loginMobileOrId.focus();
+  });
+
+  // ==================== OTP LOGIN STEP 2: VERIFY & AUTHENTICATE ====================
+  farmerLoginForm?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const enteredOtp = loginOtpInput.value.trim();
+
+    if (!enteredOtp || enteredOtp.length < 4) {
+      loginError.textContent = 'कृपया 6 अंकों का ओटीपी दर्ज करें।';
+      return;
+    }
+
+    let authResult = null;
+    if (window.KISSAN_DB && window.KISSAN_DB.farmers) {
+      authResult = window.KISSAN_DB.farmers.loginWithOTP(activeMobileForOtp, enteredOtp);
+    }
+
+    if (authResult && authResult.success) {
+      loginError.textContent = '';
+      clearInterval(countdownTimer);
+      checkFarmerAuth();
+    } else {
+      loginError.textContent = authResult ? authResult.message : 'गलत ओटीपी। कृपया पुनः प्रयास करें।';
+    }
+  });
+
+  // ==================== FARMER REGISTRATION (CLOUD SYNCED) ====================
   farmerRegisterForm?.addEventListener('submit', (e) => {
     e.preventDefault();
     const name = document.getElementById('regName').value.trim();
@@ -68,43 +166,56 @@ document.addEventListener('DOMContentLoaded', () => {
     const village = document.getElementById('regVillage').value.trim();
     const landSize = document.getElementById('regLand').value.trim();
     const crops = document.getElementById('regCrops').value.trim();
-    const pin = document.getElementById('regPin').value.trim();
 
     if (mobile.length < 10) {
       registerError.textContent = 'कृपया 10 अंकों का वैध मोबाइल नंबर दर्ज करें।';
       return;
     }
 
-    const newFarmer = window.FarmerDB.addFarmer({
-      name,
-      mobile,
-      village,
-      landSize,
-      crops,
-      pin
-    });
+    let newFarmer = null;
+    if (window.KISSAN_DB && window.KISSAN_DB.farmers) {
+      newFarmer = window.KISSAN_DB.farmers.add({
+        name,
+        mobile,
+        village,
+        landSize,
+        crops
+      });
+    }
 
-    // Auto login
-    window.FarmerDB.loginFarmer(newFarmer.mobile, newFarmer.pin);
-    registerError.textContent = '';
-    alert(`पंजीकरण सफल! आपकी किसान ID: ${newFarmer.id}`);
-    checkFarmerAuth();
+    if (newFarmer) {
+      sessionStorage.setItem('kissan_active_farmer', JSON.stringify(newFarmer));
+      registerError.textContent = '';
+      alert(`पंजीकरण सफल! आपकी किसान ID: ${newFarmer.id}\nअब आप किसी भी फोन पर अपने मोबाइल से लॉगिन कर सकते हैं।`);
+      checkFarmerAuth();
+    }
   });
 
   // Logout
   farmerLogoutBtn?.addEventListener('click', () => {
-    window.FarmerDB.logoutFarmer();
+    sessionStorage.removeItem('kissan_active_farmer');
     checkFarmerAuth();
   });
 
-  // Check Active Farmer
+  // Check Active Farmer Authentication
   function checkFarmerAuth() {
-    const farmer = window.FarmerDB.getActiveFarmer();
-    if (farmer) {
+    let activeFarmer = null;
+    try {
+      const raw = sessionStorage.getItem('kissan_active_farmer');
+      if (raw) activeFarmer = JSON.parse(raw);
+    } catch (e) {}
+
+    // Cross-verify with current database
+    if (activeFarmer && window.KISSAN_DB && window.KISSAN_DB.farmers) {
+      const live = window.KISSAN_DB.farmers.getById(activeFarmer.id || activeFarmer.mobile);
+      if (live) activeFarmer = live;
+    }
+
+    if (activeFarmer) {
       authSection.classList.add('hidden');
       dashboardSection.classList.remove('hidden');
       farmerLogoutBtn.classList.remove('hidden');
-      loadFarmerDashboard(farmer);
+      loadFarmerDashboard(activeFarmer);
     } else {
       authSection.classList.remove('hidden');
       dashboardSection.classList.add('hidden');
@@ -112,98 +223,95 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Load Farmer Dashboard
+  // Load Farmer Dashboard & Khata
   function loadFarmerDashboard(farmer) {
     farmerWelcomeName.textContent = farmer.name;
     cardFarmerId.textContent = farmer.id;
     cardFarmerName.textContent = farmer.name;
     cardFarmerMobile.textContent = farmer.mobile;
-    cardFarmerVillage.textContent = farmer.village || 'Behra Sadat';
-    cardFarmerCrops.textContent = farmer.crops || 'मुख्य फसलें';
+    cardFarmerVillage.textContent = farmer.village || 'Village Behra Sadat';
+    cardFarmerCrops.textContent = farmer.crops || 'Sugarcane, Wheat';
 
-    // Calculate Khata totals
     const khata = farmer.khata || [];
     let totalPurchases = 0;
-    let currentBalance = 0;
+    let totalBal = 0;
 
     khataTableBody.innerHTML = '';
+    recordCountLabel.textContent = `${khata.length} प्रविष्टियां`;
 
     if (khata.length === 0) {
       noKhataMsg.classList.remove('hidden');
-      recordCountLabel.textContent = '0 रिकॉर्ड';
     } else {
       noKhataMsg.classList.add('hidden');
-      recordCountLabel.textContent = `${khata.length} रिकॉर्ड`;
-
       khata.forEach(tx => {
         totalPurchases += Number(tx.amount || 0);
-        currentBalance += Number(tx.balance || 0);
+        totalBal += Number(tx.balance || 0);
 
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td><b>${tx.date || '---'}</b></td>
-          <td>${tx.product || 'Agri Item'}</td>
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${tx.date}</td>
+          <td><b>${tx.product}</b></td>
           <td>${tx.qty || '1'}</td>
           <td>₹${Number(tx.amount || 0).toLocaleString('en-IN')}</td>
-          <td style="color:#0b5d32;">₹${Number(tx.paid || 0).toLocaleString('en-IN')}</td>
-          <td style="color:${Number(tx.balance || 0) > 0 ? '#d9383a' : '#0b5d32'}; font-weight:700;">
+          <td style="color:var(--green); font-weight:700;">₹${Number(tx.paid || 0).toLocaleString('en-IN')}</td>
+          <td style="color:${Number(tx.balance || 0) > 0 ? 'var(--danger)' : 'var(--green)'}; font-weight:700;">
             ₹${Number(tx.balance || 0).toLocaleString('en-IN')}
           </td>
           <td><small>${tx.notes || '---'}</small></td>
         `;
-        khataTableBody.appendChild(tr);
+        khataTableBody.appendChild(row);
       });
     }
 
     statTotalPurchases.textContent = `₹${totalPurchases.toLocaleString('en-IN')}`;
-    statCurrentBalance.textContent = `₹${currentBalance.toLocaleString('en-IN')}`;
+    statCurrentBalance.textContent = `₹${totalBal.toLocaleString('en-IN')}`;
 
-    // Direct WhatsApp enquiry button
-    directWaBtn.onclick = () => {
-      const msg = `नमस्ते मैसर्स किसान स्टोर, मैं किसान ${farmer.name} (ID: ${farmer.id}, गांव: ${farmer.village})। मेरी फसल (${farmer.crops}) के लिए दवा की जानकारी व सलाह चाहिए।`;
-      window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`, '_blank');
-    };
+    // Direct WhatsApp consultation
+    if (directWaBtn) {
+      directWaBtn.onclick = () => {
+        const text = `नमस्ते श्री महीपाल सिंह जी (मैसर्स किसान स्टोर),%0Aमैं किसान ${farmer.name} (किसान आईडी: ${farmer.id}, गांव: ${farmer.village || 'बेहड़ा सादात'}) बोल रहा हूँ। मेरी फसल (${farmer.crops}) के संबंध में मुझे परामर्श चाहिए।`;
+        window.open(`https://wa.me/${waNumber}?text=${text}`, '_blank');
+      };
+    }
 
-    // Load Recommended Products based on Farmer Crops
-    loadCropRecommendations(farmer.crops);
+    // Load personalized recommendations
+    renderTailoredRecommendations(farmer);
   }
 
-  function loadCropRecommendations(farmerCrops) {
+  // Load Tailored Product Advice based on Farmer's Crops
+  function renderTailoredRecommendations(farmer) {
     if (!recommendedProductsGrid) return;
-    const allProducts = window.ProductStore ? window.ProductStore.getProducts() : [];
-    const cropsLower = (farmerCrops || '').toLowerCase();
+    const allProducts = window.KISSAN_DB ? window.KISSAN_DB.products.getAll() : [];
+    const farmerCropsStr = (farmer.crops || '').toLowerCase();
 
     const matched = allProducts.filter(p => {
-      if (!p.crops) return false;
-      const pCropsLower = p.crops.toLowerCase();
-      // Match keywords e.g. sugarcane, wheat, paddy, tomato
-      return cropsLower.split(',').some(cropWord => {
-        const word = cropWord.trim();
-        return word.length > 2 && pCropsLower.includes(word);
-      });
+      const prodCrops = (p.crops || '').toLowerCase();
+      return farmerCropsStr.split(',').some(c => prodCrops.includes(c.trim().toLowerCase()));
     });
 
     const displayList = matched.length > 0 ? matched.slice(0, 4) : allProducts.slice(0, 4);
 
     recommendedProductsGrid.innerHTML = '';
     displayList.forEach(p => {
-      const div = document.createElement('div');
-      div.className = 'rec-card';
-      div.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <h4>${p.name}</h4>
-          <span style="font-size:20px;">${p.icon || '🌱'}</span>
-        </div>
-        <p><b>🌾 उपयुक्त:</b> ${p.crops || 'सभी फसलें'}</p>
-        <p><b>🎯 लाभ:</b> ${p.target || 'फसल सुरक्षा'}</p>
-        <a href="https://wa.me/${waNumber}?text=${encodeURIComponent('नमस्ते मैसर्स किसान स्टोर, मुझे ' + p.name + ' के बारे में जानकारी चाहिए।')}" target="_blank" class="btn btn-primary" style="margin-top:auto; padding:7px 12px; font-size:12px;">
-          व्हाट्सएप पर पूछें →
-        </a>
+      const card = document.createElement('div');
+      card.className = 'recommended-card';
+      card.innerHTML = `
+        <div style="font-size:24px; margin-bottom:6px;">${p.icon || '🌱'}</div>
+        <h4 style="font-size:14px; font-family:Montserrat; margin-bottom:4px;">${p.name}</h4>
+        <small style="display:block; color:var(--green); font-weight:700; margin-bottom:4px;">${p.brand || 'Agri Input'}</small>
+        <p style="font-size:11.5px; color:var(--muted); margin-bottom:8px;">${p.target || 'फसल सुरक्षा एवं पैदावार'}</p>
+        <button class="btn btn-secondary btn-full btn-enquire-rec" style="font-size:11px; padding:6px;">दुकान से पूछें (WhatsApp)</button>
       `;
-      recommendedProductsGrid.appendChild(div);
+
+      card.querySelector('.btn-enquire-rec').addEventListener('click', () => {
+        const text = `नमस्ते मैसर्स किसान स्टोर, मुझे अपनी फसल (${farmer.crops}) के लिए "${p.name}" की उपलब्धता और रेट जानना है।`;
+        window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(text)}`, '_blank');
+      });
+
+      recommendedProductsGrid.appendChild(card);
     });
   }
 
-  // Initial Auth Check
+  // Check initial login state on page load
   checkFarmerAuth();
 });

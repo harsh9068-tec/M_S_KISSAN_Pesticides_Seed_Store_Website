@@ -59,10 +59,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  loginForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const now = Date.now();
+  // 2FA Admin OTP Elements
+  const adminPinStep = document.getElementById('adminPinStep');
+  const adminOtpStep = document.getElementById('adminOtpStep');
+  const adminVerifyPinBtn = document.getElementById('adminVerifyPinBtn');
+  const adminOtpInput = document.getElementById('adminOtpInput');
+  const adminWaOtpLink = document.getElementById('adminWaOtpLink');
+  const adminBackToPinBtn = document.getElementById('adminBackToPinBtn');
+  const adminMobile = '9760153116';
 
+  // Step 1: Verify PIN & Trigger 2FA OTP
+  async function handleAdminPinVerification() {
+    const now = Date.now();
     if (now < lockUntil) {
       const waitSec = Math.ceil((lockUntil - now) / 1000);
       authError.textContent = `Too many failed attempts. Locked for ${waitSec}s.`;
@@ -79,14 +87,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (isCorrect) {
-      failCount = 0;
-      localStorage.setItem('kissan_admin_fails', '0');
-      localStorage.removeItem('kissan_admin_lock_until');
-      sessionStorage.setItem('kissan_admin_auth', 'true');
       authError.textContent = '';
-      adminPinInput.value = '';
-      checkAuth();
-      showToast('Admin & Master DB unlocked successfully!');
+      // Generate Admin 2FA OTP
+      let otpRes = { code: '908442' };
+      if (window.KISSAN_DB && window.KISSAN_DB.otp) {
+        otpRes = window.KISSAN_DB.otp.generate('admin_master', 'admin_login');
+      }
+
+      if (adminWaOtpLink && window.KISSAN_DB && window.KISSAN_DB.otp) {
+        adminWaOtpLink.href = window.KISSAN_DB.otp.getWhatsAppOtpLink(adminMobile, otpRes.code, 'admin');
+      }
+
+      adminPinStep.classList.add('hidden');
+      adminOtpStep.classList.remove('hidden');
+      adminOtpInput.value = '';
+      adminOtpInput.focus();
     } else {
       failCount++;
       localStorage.setItem('kissan_admin_fails', String(failCount));
@@ -105,6 +120,51 @@ document.addEventListener('DOMContentLoaded', () => {
       authError.textContent = msg;
       adminPinInput.value = '';
       adminPinInput.focus();
+    }
+  }
+
+  adminVerifyPinBtn?.addEventListener('click', handleAdminPinVerification);
+  adminPinInput?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAdminPinVerification();
+    }
+  });
+
+  adminBackToPinBtn?.addEventListener('click', () => {
+    adminOtpStep.classList.add('hidden');
+    adminPinStep.classList.remove('hidden');
+    adminPinInput.focus();
+  });
+
+  // Step 2: Form Submit (Verify 2FA OTP & Unlock)
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const enteredOtp = adminOtpInput.value.trim();
+
+    let otpValid = false;
+    if (window.KISSAN_DB && window.KISSAN_DB.otp) {
+      const v = window.KISSAN_DB.otp.verify('admin_master', enteredOtp);
+      otpValid = v.success;
+    } else {
+      otpValid = (enteredOtp.length >= 4);
+    }
+
+    if (otpValid) {
+      failCount = 0;
+      localStorage.setItem('kissan_admin_fails', '0');
+      localStorage.removeItem('kissan_admin_lock_until');
+      sessionStorage.setItem('kissan_admin_auth', 'true');
+      authError.textContent = '';
+      adminPinInput.value = '';
+      adminOtpInput.value = '';
+      adminOtpStep.classList.add('hidden');
+      adminPinStep.classList.remove('hidden');
+      checkAuth();
+      showToast('Admin 2FA verified successfully!');
+    } else {
+      authError.textContent = 'Invalid 2FA OTP code. Please enter the correct code.';
+      adminOtpInput.focus();
     }
   });
 
