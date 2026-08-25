@@ -1,6 +1,7 @@
 # ==============================================================================
 # Multi-stage Dockerfile for M/S KISSAN Pesticides & Seed Store Application
-# Java 21 + Spring Boot 3 + Embedded Web UI & H2 Database
+# Java 21 + Spring Boot 3 + Embedded Web UI & Persistent H2 Database
+# Optimized for Cloud Deployment (Render / Railway / Docker)
 # ==============================================================================
 
 # Build Stage
@@ -23,19 +24,17 @@ RUN mvn clean package -DskipTests -B
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
-# Set non-root user for security
-RUN addgroup -S kissangroup && adduser -S kissanuser -G kissangroup
+# Create writable data directory for H2 persistent database
+RUN mkdir -p /app/data && chmod -R 777 /app/data
 
 # Copy executable jar from build stage
 COPY --from=build /app/target/kissan-pesticides-seed-store-1.0.0.jar app.jar
 
-# Expose default Spring Boot application port
+# Expose default port
 EXPOSE 8080
 
-# Environment variables
+# Memory optimized for 512MB free tier containers
 ENV PORT=8080 \
-    JAVA_OPTS="-Xms256m -Xmx512m"
+    JAVA_OPTS="-Xms128m -Xmx384m -XX:+UseG1GC -Djava.security.egd=file:/dev/./urandom"
 
-USER kissanuser
-
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -Dserver.port=${PORT} -jar app.jar"]
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -Dserver.port=${PORT:-8080} -jar app.jar"]
