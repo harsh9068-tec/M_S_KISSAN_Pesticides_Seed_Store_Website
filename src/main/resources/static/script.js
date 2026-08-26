@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const langLabel = document.getElementById('langLabel');
 
   const waNumber = '919760153116';
-  let currentLang = localStorage.getItem('kissan_lang') || 'hi';
+  let currentLang = localStorage.getItem('kissan_lang') || localStorage.getItem('kissan_preferred_language') || 'hi';
   let activeCategory = 'all';
   let products = [];
   let currentAiDiagnosis = null;
@@ -21,6 +21,11 @@ document.addEventListener('DOMContentLoaded', () => {
   function applyLanguage(lang) {
     currentLang = lang;
     localStorage.setItem('kissan_lang', lang);
+    localStorage.setItem('kissan_preferred_language', lang);
+
+    if (window.I18n && typeof window.I18n.setLang === 'function') {
+      window.I18n.setLang(lang);
+    }
 
     if (langLabel) {
       langLabel.textContent = lang === 'hi' ? 'English' : 'हिंदी';
@@ -29,23 +34,40 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!window.I18n) return;
     const dict = window.I18n.TRANSLATIONS[lang] || {};
 
-    // 1. Text Content Updates
+    // 1. Translation Text & HTML Updates
     document.querySelectorAll('[data-i18n]').forEach(el => {
       const key = el.getAttribute('data-i18n');
-      if (dict[key]) el.textContent = dict[key];
+      if (dict[key] !== undefined) {
+        const val = String(dict[key]);
+        // If translation contains HTML tags (e.g. <br>, <span>, <strong>), render with innerHTML so raw tags do not appear as text
+        if (val.includes('<') && val.includes('>')) {
+          el.innerHTML = val;
+        } else {
+          el.textContent = val;
+        }
+      }
     });
 
-    // 2. HTML Content Updates
+    // 2. Explicit HTML Content Updates
     document.querySelectorAll('[data-i18n-html]').forEach(el => {
       const key = el.getAttribute('data-i18n-html');
-      if (dict[key]) el.innerHTML = dict[key];
+      if (dict[key] !== undefined) {
+        el.innerHTML = dict[key];
+      }
     });
 
-    // 3. Placeholders
+    // 3. Placeholders Updates
     document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
       const key = el.getAttribute('data-i18n-placeholder');
-      if (dict[key]) el.placeholder = dict[key];
+      if (dict[key] !== undefined) {
+        el.placeholder = dict[key];
+      }
     });
+
+    // 4. Update segmented buttons in Theme / Settings Modal
+    if (window.ThemeManager && typeof window.ThemeManager.updateLangButtons === 'function') {
+      window.ThemeManager.updateLangButtons(lang);
+    }
 
     // Re-render dynamic components in the active language
     renderStoreProducts();
@@ -54,9 +76,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  langToggleBtn?.addEventListener('click', () => {
+  // Export applyLanguage globally so ThemeManager / Settings Modal can invoke it
+  window.applyStoreLanguage = applyLanguage;
+
+  // Toggle button event
+  langToggleBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
     const newLang = currentLang === 'hi' ? 'en' : 'hi';
     applyLanguage(newLang);
+    window.dispatchEvent(new CustomEvent('kissan-language-change', { detail: { lang: newLang } }));
+  });
+
+  // Listen to language change from settings modal
+  window.addEventListener('kissan-language-change', (e) => {
+    if (e.detail && e.detail.lang && e.detail.lang !== currentLang) {
+      applyLanguage(e.detail.lang);
+    }
   });
 
   // ==================== DYNAMIC PRODUCT CATALOG ====================
@@ -112,15 +147,15 @@ document.addEventListener('DOMContentLoaded', () => {
       all: currentLang === 'hi' ? 'कृषि उत्पाद' : 'AGRI INPUT'
     };
 
-    const badgeText = categoryBadgeKeys[p.category] || p.category.toUpperCase();
+    const badgeText = categoryBadgeKeys[p.category] || (p.category ? p.category.toUpperCase() : 'PRODUCT');
     const iconContent = p.image 
       ? `<img src="${p.image}" alt="${p.name}" class="product-thumb-img" />` 
       : `<i>${p.icon || '🌱'}</i>`;
 
-    const cropsLabel = dict.card_crops_label || '🌾 Crops:';
-    const targetLabel = dict.card_target_label || '🎯 Target:';
-    const packLabel = dict.card_pack_label || '📦 Pack Sizes:';
-    const enquireBtnText = dict.btn_enquire_card || 'Enquire on WhatsApp →';
+    const cropsLabel = dict.card_crops_label || (currentLang === 'hi' ? '🌾 फसल:' : '🌾 Crops:');
+    const targetLabel = dict.card_target_label || (currentLang === 'hi' ? '🎯 काम:' : '🎯 Target:');
+    const packLabel = dict.card_pack_label || (currentLang === 'hi' ? '📦 पैक साइज:' : '📦 Pack Sizes:');
+    const enquireBtnText = dict.btn_enquire_card || (currentLang === 'hi' ? 'दुकान से पूछें (WhatsApp) →' : 'Enquire on WhatsApp →');
 
     card.innerHTML = `
       <div class="product-top">
