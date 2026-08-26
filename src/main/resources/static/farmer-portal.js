@@ -1,12 +1,14 @@
 // ============================================================================
-// M/S KISSAN - FARMER PORTAL & OTP AUTHENTICATION JAVASCRIPT
-// Multi-Device Cloud Sync & Digital Passbook
+// M/S KISSAN - FARMER PORTAL & AUTHENTICATION JAVASCRIPT
+// Real-Time Multi-Device Database Sync, Password Authentication & Digital Passbook
 // ============================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
   const authSection = document.getElementById('authSection');
   const dashboardSection = document.getElementById('dashboardSection');
   const farmerLogoutBtn = document.getElementById('farmerLogoutBtn');
+  const openChangePassModalBtn = document.getElementById('openChangePassModalBtn');
+  const refreshFarmerDataBtn = document.getElementById('refreshFarmerDataBtn');
 
   // Tabs & Forms
   const tabLoginBtn = document.getElementById('tabLoginBtn');
@@ -16,17 +18,25 @@ document.addEventListener('DOMContentLoaded', () => {
   const loginError = document.getElementById('loginError');
   const registerError = document.getElementById('registerError');
 
-  // OTP Elements
+  // Password Login Elements
+  const passwordLoginBlock = document.getElementById('passwordLoginBlock');
+  const loginMobileOrId = document.getElementById('loginMobileOrId');
+  const loginPassword = document.getElementById('loginPassword');
+  const toggleLoginPassVisibility = document.getElementById('toggleLoginPassVisibility');
+  const toggleOtpModeBtn = document.getElementById('toggleOtpModeBtn');
+  const backToPasswordLoginBtn = document.getElementById('backToPasswordLoginBtn');
+
+  // OTP Login Elements
+  const otpLoginBlock = document.getElementById('otpLoginBlock');
   const otpStep1 = document.getElementById('otpStep1');
   const otpStep2 = document.getElementById('otpStep2');
-  const loginMobileOrId = document.getElementById('loginMobileOrId');
+  const otpMobileInput = document.getElementById('otpMobileInput');
   const loginOtpInput = document.getElementById('loginOtpInput');
   const getOtpBtn = document.getElementById('getOtpBtn');
+  const verifyOtpBtn = document.getElementById('verifyOtpBtn');
   const otpSentMobileLabel = document.getElementById('otpSentMobileLabel');
-  const openWaOtpBtn = document.getElementById('openWaOtpBtn');
   const resendOtpBtn = document.getElementById('resendOtpBtn');
   const resendCountdown = document.getElementById('resendCountdown');
-  const changeMobileBtn = document.getElementById('changeMobileBtn');
 
   // Dashboard Elements
   const farmerWelcomeName = document.getElementById('farmerWelcomeName');
@@ -43,6 +53,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const recommendedProductsGrid = document.getElementById('recommendedProductsGrid');
   const directWaBtn = document.getElementById('directWaBtn');
 
+  // Change Password Elements
+  const changePassModal = document.getElementById('changePassModal');
+  const closeChangePassBtn = document.getElementById('closeChangePassBtn');
+  const closeChangePassBackdrop = document.getElementById('closeChangePassBackdrop');
+  const changePasswordForm = document.getElementById('changePasswordForm');
+  const oldPasswordInput = document.getElementById('oldPasswordInput');
+  const newPasswordInput = document.getElementById('newPasswordInput');
+  const confirmNewPassInput = document.getElementById('confirmNewPassInput');
+  const changePassMsg = document.getElementById('changePassMsg');
+  const changePassFarmerMeta = document.getElementById('changePassFarmerMeta');
+
   const waNumber = '919760153116';
   let activeMobileForOtp = '';
   let countdownTimer = null;
@@ -53,6 +74,8 @@ document.addEventListener('DOMContentLoaded', () => {
     tabRegisterBtn.classList.remove('active');
     farmerLoginForm.classList.remove('hidden');
     farmerRegisterForm.classList.add('hidden');
+    loginError.textContent = '';
+    registerError.textContent = '';
   });
 
   tabRegisterBtn?.addEventListener('click', () => {
@@ -60,9 +83,85 @@ document.addEventListener('DOMContentLoaded', () => {
     tabLoginBtn.classList.remove('active');
     farmerRegisterForm.classList.remove('hidden');
     farmerLoginForm.classList.add('hidden');
+    loginError.textContent = '';
+    registerError.textContent = '';
   });
 
-  // ==================== OTP LOGIN STEP 1: REQUEST OTP ====================
+  // Password Visibility Toggle
+  toggleLoginPassVisibility?.addEventListener('click', () => {
+    if (!loginPassword) return;
+    if (loginPassword.type === 'password') {
+      loginPassword.type = 'text';
+      toggleLoginPassVisibility.textContent = '🙈 छुपाएं (Hide)';
+    } else {
+      loginPassword.type = 'password';
+      toggleLoginPassVisibility.textContent = '👁️ पासवर्ड देखें (Show)';
+    }
+  });
+
+  // Toggle OTP / Password Login Mode
+  toggleOtpModeBtn?.addEventListener('click', () => {
+    passwordLoginBlock.classList.add('hidden');
+    otpLoginBlock.classList.remove('hidden');
+    otpStep1.classList.remove('hidden');
+    otpStep2.classList.add('hidden');
+    loginError.textContent = '';
+    if (otpMobileInput) {
+      otpMobileInput.value = loginMobileOrId.value.trim();
+      otpMobileInput.focus();
+    }
+  });
+
+  backToPasswordLoginBtn?.addEventListener('click', () => {
+    otpLoginBlock.classList.add('hidden');
+    passwordLoginBlock.classList.remove('hidden');
+    loginError.textContent = '';
+    loginMobileOrId.focus();
+  });
+
+  // ==================== 1. PASSWORD-BASED LOGIN ====================
+  farmerLoginForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!otpLoginBlock.classList.contains('hidden')) {
+      // In OTP mode, do not submit as password
+      return;
+    }
+
+    const mobileOrId = loginMobileOrId.value.trim();
+    const password = loginPassword.value.trim();
+
+    if (!mobileOrId) {
+      loginError.textContent = 'कृपया मोबाइल नंबर या किसान ID दर्ज करें।';
+      return;
+    }
+    if (!password) {
+      loginError.textContent = 'कृपया अपना पासवर्ड दर्ज करें।';
+      return;
+    }
+
+    loginError.textContent = 'सत्यापित किया जा रहा है...';
+
+    // Call Central Spring Boot REST API
+    let authRes = null;
+    if (window.KISSAN_API && typeof window.KISSAN_API.loginFarmer === 'function') {
+      authRes = await window.KISSAN_API.loginFarmer(mobileOrId, password);
+    } else if (window.KISSAN_DB && window.KISSAN_DB.farmers) {
+      authRes = window.KISSAN_DB.farmers.loginWithPassword(mobileOrId, password);
+    }
+
+    if (authRes && authRes.success && authRes.farmer) {
+      sessionStorage.setItem('kissan_active_farmer', JSON.stringify(authRes.farmer));
+      loginError.textContent = '';
+      loginPassword.value = '';
+      checkFarmerAuth();
+    } else {
+      loginError.textContent = authRes && authRes.message
+        ? authRes.message
+        : 'गलत मोबाइल नंबर या पासवर्ड। कृपया पुनः प्रयास करें।';
+    }
+  });
+
+  // ==================== 2. OTP-BASED LOGIN (BACKUP) ====================
   function startResendTimer() {
     let timeLeft = 30;
     if (resendOtpBtn) resendOtpBtn.disabled = true;
@@ -83,70 +182,42 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 1000);
   }
 
-  function handleSendOtp() {
-    const rawVal = loginMobileOrId.value.trim();
+  getOtpBtn?.addEventListener('click', () => {
+    const rawVal = otpMobileInput.value.trim();
     if (!rawVal || rawVal.length < 4) {
-      loginError.textContent = 'कृपया 10 अंकों का मोबाइल नंबर या किसान ID दर्ज करें।';
+      loginError.textContent = 'कृपया 10 अंकों का वैध मोबाइल नंबर दर्ज करें।';
       return;
     }
 
     activeMobileForOtp = rawVal;
     loginError.textContent = '';
 
-    // Generate 6-digit OTP via Master DB / Backend engine
     let otpRes = { code: '123456' };
     if (window.KISSAN_DB && window.KISSAN_DB.otp) {
       otpRes = window.KISSAN_DB.otp.generate(activeMobileForOtp, 'farmer_login');
     }
 
-    // Mask phone number for privacy (e.g. +91 98971 •••••)
     const cleanDigits = activeMobileForOtp.replace(/\D/g, '');
     const masked = cleanDigits.length >= 10
       ? `+91 ${cleanDigits.slice(0, 5)} •••••`
       : activeMobileForOtp;
 
-    otpSentMobileLabel.textContent = masked;
+    if (otpSentMobileLabel) otpSentMobileLabel.textContent = masked;
 
     otpStep1.classList.add('hidden');
     otpStep2.classList.remove('hidden');
-    loginOtpInput.value = '';
-    loginOtpInput.focus();
-
-    // Set WhatsApp OTP delivery link
-    if (openWaOtpBtn && window.KISSAN_DB && window.KISSAN_DB.otp) {
-      openWaOtpBtn.href = window.KISSAN_DB.otp.getWhatsAppOtpLink(activeMobileForOtp, otpRes.code, 'farmer');
+    if (loginOtpInput) {
+      loginOtpInput.value = '';
+      loginOtpInput.focus();
     }
 
     startResendTimer();
-  }
-
-  getOtpBtn?.addEventListener('click', handleSendOtp);
-
-  loginMobileOrId?.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleSendOtp();
-    }
   });
 
-  resendOtpBtn?.addEventListener('click', () => {
-    handleSendOtp();
-  });
-
-  changeMobileBtn?.addEventListener('click', () => {
-    clearInterval(countdownTimer);
-    otpStep2.classList.add('hidden');
-    otpStep1.classList.remove('hidden');
-    loginMobileOrId.focus();
-  });
-
-  // ==================== OTP LOGIN STEP 2: VERIFY & AUTHENTICATE ====================
-  farmerLoginForm?.addEventListener('submit', (e) => {
-    e.preventDefault();
+  verifyOtpBtn?.addEventListener('click', () => {
     const enteredOtp = loginOtpInput.value.trim();
-
     if (!enteredOtp || enteredOtp.length < 4) {
-      loginError.textContent = 'कृपया 6 अंकों का ओटीपी दर्ज करें।';
+      loginError.textContent = 'कृपया 6 अंकों का ओटीपी कोड दर्ज करें।';
       return;
     }
 
@@ -155,7 +226,8 @@ document.addEventListener('DOMContentLoaded', () => {
       authResult = window.KISSAN_DB.farmers.loginWithOTP(activeMobileForOtp, enteredOtp);
     }
 
-    if (authResult && authResult.success) {
+    if (authResult && authResult.success && authResult.farmer) {
+      sessionStorage.setItem('kissan_active_farmer', JSON.stringify(authResult.farmer));
       loginError.textContent = '';
       clearInterval(countdownTimer);
       checkFarmerAuth();
@@ -164,37 +236,152 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // ==================== FARMER REGISTRATION (CLOUD SYNCED) ====================
-  farmerRegisterForm?.addEventListener('submit', (e) => {
+  resendOtpBtn?.addEventListener('click', () => {
+    if (getOtpBtn) getOtpBtn.click();
+  });
+
+  // ==================== 3. FARMER REGISTRATION (SAVED TO CENTRAL DATABASE) ====================
+  farmerRegisterForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = document.getElementById('regName').value.trim();
     const mobile = document.getElementById('regMobile').value.trim();
     const village = document.getElementById('regVillage').value.trim();
     const landSize = document.getElementById('regLand').value.trim();
     const crops = document.getElementById('regCrops').value.trim();
+    const password = document.getElementById('regPassword').value.trim();
+    const confirmPassword = document.getElementById('regConfirmPassword').value.trim();
 
     if (mobile.length < 10) {
       registerError.textContent = 'कृपया 10 अंकों का वैध मोबाइल नंबर दर्ज करें।';
       return;
     }
 
-    let newFarmer = null;
-    if (window.KISSAN_DB && window.KISSAN_DB.farmers) {
-      newFarmer = window.KISSAN_DB.farmers.add({
-        name,
-        mobile,
-        village,
-        landSize,
-        crops
-      });
+    if (!password || password.length < 4) {
+      registerError.textContent = 'पासवर्ड कम से कम 4 अक्षरों या अंकों का होना चाहिए।';
+      return;
     }
 
-    if (newFarmer) {
+    if (password !== confirmPassword) {
+      registerError.textContent = 'दोनों पासवर्ड मेल नहीं खाते। कृपया पुनः जांचें।';
+      return;
+    }
+
+    registerError.textContent = 'केंद्रीय डेटाबेस में पंजीकरण किया जा रहा है...';
+
+    const farmerPayload = {
+      name,
+      mobile,
+      village,
+      landSize: landSize || '5 Bigha',
+      crops: crops || 'Sugarcane, Wheat',
+      password,
+      pin: password,
+      notes: 'Registered via Farmer Portal'
+    };
+
+    let newFarmer = null;
+    if (window.KISSAN_API && typeof window.KISSAN_API.registerFarmer === 'function') {
+      newFarmer = await window.KISSAN_API.registerFarmer(farmerPayload);
+    } else if (window.KISSAN_DB && window.KISSAN_DB.farmers) {
+      newFarmer = window.KISSAN_DB.farmers.add(farmerPayload);
+    }
+
+    if (newFarmer && (newFarmer.id || newFarmer.mobile)) {
       sessionStorage.setItem('kissan_active_farmer', JSON.stringify(newFarmer));
       registerError.textContent = '';
-      alert(`पंजीकरण सफल! आपकी किसान ID: ${newFarmer.id}\nअब आप किसी भी फोन पर अपने मोबाइल से लॉगिन कर सकते हैं।`);
+      farmerRegisterForm.reset();
+      alert(`पंजीकरण सफल!\nआपकी किसान ID: ${newFarmer.id}\nपासवर्ड: ${password}\nयह खाता ओनर पोर्टल पर भी दर्ज हो चुका है।`);
       checkFarmerAuth();
+    } else {
+      registerError.textContent = 'पंजीकरण में त्रुटि। कृपया पुनः प्रयास करें।';
     }
+  });
+
+  // ==================== 4. CHANGE PASSWORD MODAL ====================
+  openChangePassModalBtn?.addEventListener('click', () => {
+    let currentFarmer = getStoredFarmer();
+    if (!currentFarmer) return;
+
+    changePassFarmerMeta.textContent = `किसान: ${currentFarmer.name} (${currentFarmer.id})`;
+    changePasswordForm.reset();
+    changePassMsg.textContent = '';
+    changePassMsg.style.color = 'var(--danger)';
+    changePassModal.classList.remove('hidden');
+  });
+
+  function closeChangePass() {
+    changePassModal.classList.add('hidden');
+  }
+
+  closeChangePassBtn?.addEventListener('click', closeChangePass);
+  closeChangePassBackdrop?.addEventListener('click', closeChangePass);
+
+  changePasswordForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    let currentFarmer = getStoredFarmer();
+    if (!currentFarmer) return;
+
+    const oldPass = oldPasswordInput.value.trim();
+    const newPass = newPasswordInput.value.trim();
+    const confirmPass = confirmNewPassInput.value.trim();
+
+    const expectedPass = currentFarmer.password || currentFarmer.pin || '';
+    if (oldPass !== expectedPass) {
+      changePassMsg.textContent = 'वर्तमान पासवर्ड गलत है।';
+      return;
+    }
+
+    if (newPass.length < 4) {
+      changePassMsg.textContent = 'नया पासवर्ड कम से कम 4 अक्षरों का होना चाहिए।';
+      return;
+    }
+
+    if (newPass !== confirmPass) {
+      changePassMsg.textContent = 'नया पासवर्ड और पुष्टि पासवर्ड मेल नहीं खाते।';
+      return;
+    }
+
+    // Call API to reset password in backend database
+    let res = null;
+    if (window.KISSAN_API && typeof window.KISSAN_API.resetFarmerPassword === 'function') {
+      res = await window.KISSAN_API.resetFarmerPassword(currentFarmer.id, newPass);
+    } else if (window.KISSAN_DB && window.KISSAN_DB.farmers) {
+      window.KISSAN_DB.farmers.update(currentFarmer.id, { password: newPass, pin: newPass });
+      res = { success: true };
+    }
+
+    if (res && res.success) {
+      currentFarmer.password = newPass;
+      currentFarmer.pin = newPass;
+      sessionStorage.setItem('kissan_active_farmer', JSON.stringify(currentFarmer));
+      changePassMsg.style.color = 'var(--green)';
+      changePassMsg.textContent = 'पासवर्ड सफलतापूर्वक बदल दिया गया!';
+      setTimeout(() => {
+        closeChangePass();
+      }, 1200);
+    } else {
+      changePassMsg.textContent = res ? res.message : 'पासवर्ड अपडेट करने में त्रुटि।';
+    }
+  });
+
+  // Refresh live farmer data from central server
+  refreshFarmerDataBtn?.addEventListener('click', async () => {
+    let current = getStoredFarmer();
+    if (!current) return;
+    refreshFarmerDataBtn.disabled = true;
+    refreshFarmerDataBtn.textContent = '⏳ लोडिंग...';
+
+    if (window.KISSAN_API && typeof window.KISSAN_API.getFarmer === 'function') {
+      const live = await window.KISSAN_API.getFarmer(current.id);
+      if (live) {
+        sessionStorage.setItem('kissan_active_farmer', JSON.stringify(live));
+        loadFarmerDashboard(live);
+      }
+    }
+    setTimeout(() => {
+      refreshFarmerDataBtn.disabled = false;
+      refreshFarmerDataBtn.textContent = '🔄 रिफ्रेश';
+    }, 500);
   });
 
   // Logout
@@ -203,36 +390,53 @@ document.addEventListener('DOMContentLoaded', () => {
     checkFarmerAuth();
   });
 
-  // Check Active Farmer Authentication
-  function checkFarmerAuth() {
-    let activeFarmer = null;
+  function getStoredFarmer() {
     try {
       const raw = sessionStorage.getItem('kissan_active_farmer');
-      if (raw) activeFarmer = JSON.parse(raw);
+      if (raw) return JSON.parse(raw);
     } catch (e) {}
+    return null;
+  }
 
-    // Cross-verify with current database
-    if (activeFarmer && window.KISSAN_DB && window.KISSAN_DB.farmers) {
-      const live = window.KISSAN_DB.farmers.getById(activeFarmer.id || activeFarmer.mobile);
-      if (live) activeFarmer = live;
-    }
+  // Check Active Farmer Authentication
+  async function checkFarmerAuth() {
+    let activeFarmer = getStoredFarmer();
 
     if (activeFarmer) {
+      // Sync fresh details from backend database if available
+      if (window.KISSAN_API && typeof window.KISSAN_API.getFarmer === 'function') {
+        try {
+          const fresh = await window.KISSAN_API.getFarmer(activeFarmer.id || activeFarmer.mobile);
+          if (fresh) {
+            activeFarmer = fresh;
+            sessionStorage.setItem('kissan_active_farmer', JSON.stringify(fresh));
+          }
+        } catch (e) {}
+      } else if (window.KISSAN_DB && window.KISSAN_DB.farmers) {
+        const live = window.KISSAN_DB.farmers.getById(activeFarmer.id || activeFarmer.mobile);
+        if (live) activeFarmer = live;
+      }
+
       authSection.classList.add('hidden');
       dashboardSection.classList.remove('hidden');
       farmerLogoutBtn.classList.remove('hidden');
+      openChangePassModalBtn?.classList.remove('hidden');
+      refreshFarmerDataBtn?.classList.remove('hidden');
       loadFarmerDashboard(activeFarmer);
     } else {
       authSection.classList.remove('hidden');
       dashboardSection.classList.add('hidden');
       farmerLogoutBtn.classList.add('hidden');
+      openChangePassModalBtn?.classList.add('hidden');
+      refreshFarmerDataBtn?.classList.add('hidden');
     }
   }
 
   // Load Farmer Dashboard & Khata
   function loadFarmerDashboard(farmer) {
+    if (!farmer) return;
     farmerWelcomeName.textContent = farmer.name;
-    cardFarmerId.textContent = farmer.id;
+    cardFarmerId.textContent = farmer.id || 'KIS-1001';
     cardFarmerName.textContent = farmer.name;
     cardFarmerMobile.textContent = farmer.mobile;
     cardFarmerVillage.textContent = farmer.village || 'Village Behra Sadat';
@@ -243,7 +447,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let totalBal = 0;
 
     khataTableBody.innerHTML = '';
-    recordCountLabel.textContent = `${khata.length} प्रविष्टियां`;
+    recordCountLabel.textContent = `${khata.length} रिकॉर्ड`;
 
     if (khata.length === 0) {
       noKhataMsg.classList.remove('hidden');
@@ -318,6 +522,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Check initial login state on page load
+  // Initial Auth Check
   checkFarmerAuth();
 });

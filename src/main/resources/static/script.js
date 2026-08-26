@@ -1,101 +1,59 @@
-// M/S KISSAN Pesticides & Seed Store - Storefront Logic, Bilingual Engine & AI Crop Doctor
+// ============================================================================
+// M/S KISSAN - STOREFRONT APP JAVASCRIPT
+// Dual-Language I18n, Dynamic Catalog, Central Database Sync & AI Crop Doctor
+// ============================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Navigation & Mobile Menu
-  const menuToggle = document.querySelector('.menu-toggle');
-  const nav = document.querySelector('.nav');
-
-  menuToggle?.addEventListener('click', () => {
-    const open = nav.classList.toggle('open');
-    menuToggle.setAttribute('aria-expanded', String(open));
-  });
-
-  document.querySelectorAll('.nav a').forEach(link => {
-    link.addEventListener('click', () => nav.classList.remove('open'));
-  });
-
-  // State & Store Variables
-  const waNumber = '919760153116';
-  const productGrid = document.getElementById('productGrid');
-  const searchInput = document.getElementById('clientSearchInput');
-  const noResultsMsg = document.getElementById('clientNoResults');
+  const searchInput = document.getElementById('search');
   const tabs = document.querySelectorAll('.tab');
+  const productGrid = document.querySelector('.product-grid');
+  const noResultsMsg = document.getElementById('noResults');
   const langToggleBtn = document.getElementById('langToggleBtn');
-  const langBtnLabel = document.getElementById('langBtnLabel');
+  const langLabel = document.getElementById('langLabel');
 
+  const waNumber = '919760153116';
+  let currentLang = localStorage.getItem('kissan_lang') || 'hi';
   let activeCategory = 'all';
-  let currentLang = window.I18n ? window.I18n.getLang() : 'en';
-  let products = window.ProductStore ? window.ProductStore.getProducts() : [];
+  let products = [];
   let currentAiDiagnosis = null;
 
-  // ==================== BILINGUAL TRANSLATION LOGIC ====================
+  // ==================== BILINGUAL TRANSLATION ENGINE ====================
   function applyLanguage(lang) {
-    if (!window.I18n || !window.I18n.TRANSLATIONS[lang]) return;
-
     currentLang = lang;
-    window.I18n.setLang(lang);
-    const dict = window.I18n.TRANSLATIONS[lang];
+    localStorage.setItem('kissan_lang', lang);
 
-    // Update all elements with data-i18n attribute
+    if (langLabel) {
+      langLabel.textContent = lang === 'hi' ? 'English' : 'हिंदी';
+    }
+
+    if (!window.I18n) return;
+    const dict = window.I18n.TRANSLATIONS[lang] || {};
+
+    // 1. Text Content Updates
     document.querySelectorAll('[data-i18n]').forEach(el => {
-      const key = el.dataset.i18n;
-      if (dict[key]) {
-        el.innerHTML = dict[key];
-      }
+      const key = el.getAttribute('data-i18n');
+      if (dict[key]) el.textContent = dict[key];
     });
 
-    // Update Input Placeholders
-    if (searchInput && dict.search_placeholder) {
-      searchInput.placeholder = dict.search_placeholder;
-    }
+    // 2. HTML Content Updates
+    document.querySelectorAll('[data-i18n-html]').forEach(el => {
+      const key = el.getAttribute('data-i18n-html');
+      if (dict[key]) el.innerHTML = dict[key];
+    });
 
-    const formNameInput = document.getElementById('formNameInput');
-    if (formNameInput && dict.form_name_ph) {
-      formNameInput.placeholder = dict.form_name_ph;
-    }
+    // 3. Placeholders
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+      const key = el.getAttribute('data-i18n-placeholder');
+      if (dict[key]) el.placeholder = dict[key];
+    });
 
-    const formCropInput = document.getElementById('formCropInput');
-    if (formCropInput && dict.form_crop_ph) {
-      formCropInput.placeholder = dict.form_crop_ph;
-    }
-
-    const formMsgInput = document.getElementById('formMsgInput');
-    if (formMsgInput && dict.form_msg_ph) {
-      formMsgInput.placeholder = dict.form_msg_ph;
-    }
-
-    const aiSymptomsInput = document.getElementById('aiSymptomsInput');
-    if (aiSymptomsInput && dict.ai_symptoms_ph) {
-      aiSymptomsInput.placeholder = dict.ai_symptoms_ph;
-    }
-
-    // Update Language Toggle Button Label
-    if (langBtnLabel) {
-      langBtnLabel.textContent = lang === 'hi' ? 'Switch to English' : 'हिंदी में देखें';
-    }
-
-    // Re-render product catalog in selected language
+    // Re-render dynamic components in the active language
     renderStoreProducts();
-
-    // Re-render active AI Diagnosis if open
     if (currentAiDiagnosis) {
       displayAiDiagnosis(currentAiDiagnosis);
     }
-    // Expose globally and update settings buttons
-    window.applyStoreLanguage = applyLanguage;
-    if (window.ThemeManager && typeof window.ThemeManager.updateLangButtons === 'function') {
-      window.ThemeManager.updateLangButtons(lang);
-    }
   }
 
-  window.applyStoreLanguage = applyLanguage;
-  window.addEventListener('kissan-language-change', (e) => {
-    if (e.detail && e.detail.lang) {
-      applyLanguage(e.detail.lang);
-    }
-  });
-
-  // Toggle Language Click
   langToggleBtn?.addEventListener('click', () => {
     const newLang = currentLang === 'hi' ? 'en' : 'hi';
     applyLanguage(newLang);
@@ -107,6 +65,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (window.ProductStore) {
       products = window.ProductStore.getProducts();
+    } else if (window.KISSAN_DB) {
+      products = window.KISSAN_DB.products.getAll();
     }
 
     const dict = window.I18n ? window.I18n.TRANSLATIONS[currentLang] : {};
@@ -201,11 +161,16 @@ document.addEventListener('DOMContentLoaded', () => {
   searchInput?.addEventListener('input', () => {
     renderStoreProducts();
     const query = searchInput.value.trim();
-    if (query.length >= 2 && window.FarmerDB) {
+    if (query.length >= 2) {
       clearTimeout(searchDebounceTimer);
       searchDebounceTimer = setTimeout(() => {
         const count = productGrid ? productGrid.querySelectorAll('.product-card').length : 0;
-        window.FarmerDB.logSearch(query, activeCategory, count);
+        if (window.KISSAN_API) {
+          window.KISSAN_API.logSearch(query, activeCategory, count);
+        }
+        if (window.KISSAN_DB) {
+          window.KISSAN_DB.searchAnalytics.log(query, activeCategory, count);
+        }
       }, 700);
     }
   });
@@ -271,7 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
     runAiScanBtn.disabled = true;
 
     // Simulate AI Neural Engine processing
-    setTimeout(() => {
+    setTimeout(async () => {
       if (window.CropAIDoctor) {
         currentAiDiagnosis = window.CropAIDoctor.diagnose({
           crop: selectedCrop,
@@ -281,15 +246,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
         displayAiDiagnosis(currentAiDiagnosis);
 
-        // Log in Master Database AI Doctor scans collection
+        const scanLogPayload = {
+          crop: currentAiDiagnosis.crop,
+          cropName: currentAiDiagnosis.cropNameEn,
+          disease: currentAiDiagnosis.diseaseNameEn,
+          confidence: currentAiDiagnosis.confidence || '95%',
+          recommendedMedicine: currentAiDiagnosis.recommendedProduct,
+          dosage: currentAiDiagnosis.dosageEn,
+          source: 'Storefront AI Doctor'
+        };
+
+        // Log in Central Backend Database & Local Store
+        if (window.KISSAN_API) {
+          await window.KISSAN_API.logAIScan(scanLogPayload);
+          window.KISSAN_API.logSearch(`[AI Doctor] ${currentAiDiagnosis.diseaseNameEn} (${currentAiDiagnosis.cropNameEn})`, currentAiDiagnosis.crop, 1);
+        }
         if (window.KISSAN_DB) {
-          window.KISSAN_DB.aiDoctor.log({
-            ...currentAiDiagnosis,
-            source: 'Storefront AI Doctor'
-          });
+          window.KISSAN_DB.aiDoctor.log(scanLogPayload);
           window.KISSAN_DB.searchAnalytics.log(`[AI Doctor] ${currentAiDiagnosis.diseaseNameEn} (${currentAiDiagnosis.cropNameEn})`, currentAiDiagnosis.crop, 1);
-        } else if (window.FarmerDB) {
-          window.FarmerDB.logSearch(`[AI Doctor] ${currentAiDiagnosis.diseaseNameEn} (${currentAiDiagnosis.cropNameEn})`, currentAiDiagnosis.crop, 1);
         }
       }
 
@@ -365,21 +339,32 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Contact Enquiry Form Submit
-  document.getElementById('enquiryForm')?.addEventListener('submit', (e) => {
+  document.getElementById('enquiryForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const data = new FormData(e.target);
-    const name = data.get('name');
-    const crop = data.get('crop');
-    const message = data.get('message');
+    const name = data.get('name') || '';
+    const phone = data.get('phone') || '';
+    const crop = data.get('crop') || '';
+    const message = data.get('message') || '';
 
-    // Save in Master DB enquiries collection
+    const enquiryPayload = {
+      name: String(name).trim(),
+      phone: String(phone).trim(),
+      crop: String(crop).trim(),
+      message: String(message).trim()
+    };
+
+    // Save in Central Database via REST API & Master DB
+    if (window.KISSAN_API) {
+      await window.KISSAN_API.submitEnquiry(enquiryPayload);
+    }
     if (window.KISSAN_DB) {
-      window.KISSAN_DB.enquiries.add({ name, crop, message });
+      window.KISSAN_DB.enquiries.add(enquiryPayload);
     }
 
     const text = currentLang === 'hi'
-      ? `नमस्ते मैसर्स किसान पेस्टिसाइड्स एवं बीज स्टोर,%0A%0Aनाम: ${name}%0Aफसल: ${crop || 'विवरण नहीं'}%0Aपूछताछ: ${message}`
-      : `Hello M/S KISSAN Pesticides and Seed Store,%0A%0AName: ${name}%0ACrop: ${crop || 'Not specified'}%0AEnquiry: ${message}`;
+      ? `नमस्ते मैसर्स किसान पेस्टिसाइड्स एवं बीज स्टोर,%0A%0Aनाम: ${name}%0Aमोबाइल: ${phone}%0Aफसल: ${crop || 'विवरण नहीं'}%0Aपूछताछ: ${message}`
+      : `Hello M/S KISSAN Pesticides and Seed Store,%0A%0AName: ${name}%0APhone: ${phone}%0ACrop: ${crop || 'Not specified'}%0AEnquiry: ${message}`;
     window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(text)}`, '_blank');
   });
 

@@ -26,6 +26,8 @@ public class Farmer {
 
     private String pin;
 
+    private String password;
+
     private String village;
 
     private String landSize;
@@ -48,6 +50,20 @@ public class Farmer {
         this.name = name;
         this.mobile = mobile;
         this.pin = pin;
+        this.password = pin; // default password to pin if not provided
+        this.village = village;
+        this.landSize = landSize;
+        this.crops = crops;
+        this.registeredDate = registeredDate;
+        this.notes = notes;
+    }
+
+    public Farmer(String id, String name, String mobile, String pin, String password, String village, String landSize, String crops, String registeredDate, String notes) {
+        this.id = id;
+        this.name = name;
+        this.mobile = mobile;
+        this.pin = pin;
+        this.password = password != null && !password.isEmpty() ? password : pin;
         this.village = village;
         this.landSize = landSize;
         this.crops = crops;
@@ -66,6 +82,9 @@ public class Farmer {
 
     public String getPin() { return pin; }
     public void setPin(String pin) { this.pin = pin; }
+
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
 
     public String getVillage() { return village; }
     public void setVillage(String village) { this.village = village; }

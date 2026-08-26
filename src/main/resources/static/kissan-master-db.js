@@ -1,6 +1,6 @@
 // ============================================================================
 // M/S KISSAN PESTICIDES & SEED STORE - MASTER DATABASE & CLOUD SYNC ENGINE
-// Multi-Device Cloud Synchronization, Relational DB & Advanced OTP Security
+// Multi-Device Spring Boot Synchronization, Relational DB & Password Security
 // ============================================================================
 
 (function (window) {
@@ -45,6 +45,7 @@
       name: 'Chaudhary Ramesh Kumar',
       mobile: '9897123456',
       pin: '1122',
+      password: '1122',
       village: 'Village Behra Sadat',
       landSize: '15 Bigha',
       crops: 'Sugarcane, Wheat, Mustard',
@@ -69,6 +70,7 @@
       name: 'Sardar Gurpreet Singh',
       mobile: '9760987654',
       pin: '3344',
+      password: '3344',
       village: 'Post Morna, Jansath',
       landSize: '25 Bigha',
       crops: 'Wheat, Paddy, Sugarcane',
@@ -93,6 +95,7 @@
       name: 'Virendra Singh Tyagi',
       mobile: '9837554433',
       pin: '5566',
+      password: '5566',
       village: 'Behra Sadat',
       landSize: '10 Bigha',
       crops: 'Sugarcane, Tomato, Chilli',
@@ -138,61 +141,6 @@
     }
   ];
 
-  // ==================== CENTRAL CLOUD SYNC RELAY ====================
-  const CLOUD_CONFIG = {
-    endpoint: 'https://kissan-store-cloud-default-rtdb.firebaseio.com'
-  };
-
-  const CloudSyncEngine = {
-    async syncPush(table, data) {
-      try {
-        if (!navigator.onLine) return false;
-        await fetch(`${CLOUD_CONFIG.endpoint}/${table}.json`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
-        return true;
-      } catch (err) {
-        return false;
-      }
-    },
-
-    async syncPull(table) {
-      try {
-        if (!navigator.onLine) return null;
-        const res = await fetch(`${CLOUD_CONFIG.endpoint}/${table}.json`);
-        if (res.ok) return await res.json();
-        return null;
-      } catch (err) {
-        return null;
-      }
-    },
-
-    async syncAll() {
-      try {
-        const cloudFarmers = await this.syncPull('farmers');
-        if (Array.isArray(cloudFarmers) && cloudFarmers.length > 0) {
-          const localFarmers = FarmersController.getAllLocal();
-          const merged = [...cloudFarmers];
-          localFarmers.forEach(localF => {
-            if (!merged.some(c => c.mobile === localF.mobile || c.id === localF.id)) {
-              merged.push(localF);
-            }
-          });
-          setRaw(KEYS.FARMERS, merged);
-        }
-
-        const cloudInvoices = await this.syncPull('invoices');
-        if (Array.isArray(cloudInvoices) && cloudInvoices.length > 0) {
-          setRaw(KEYS.INVOICES, cloudInvoices);
-        }
-      } catch (e) {}
-    }
-  };
-
-  setTimeout(() => CloudSyncEngine.syncAll(), 300);
-
   // Storage Helpers
   function getRaw(key, defaultVal) {
     try {
@@ -216,13 +164,50 @@
     }
   }
 
+  // ==================== CENTRAL SERVER / DB SYNC ENGINE ====================
+  const CloudSyncEngine = {
+    async syncAll() {
+      try {
+        if (window.KISSAN_API) {
+          // Pull live data from Spring Boot central backend
+          const farmers = await window.KISSAN_API.getFarmers();
+          if (Array.isArray(farmers) && farmers.length > 0) {
+            FarmersController.saveAllLocal(farmers);
+          }
+
+          const invoices = await window.KISSAN_API.getInvoices();
+          if (Array.isArray(invoices) && invoices.length > 0) {
+            InvoicesController.saveAllLocal(invoices);
+          }
+
+          const products = await window.KISSAN_API.getProducts();
+          if (Array.isArray(products) && products.length > 0) {
+            ProductsController.saveAllLocal(products);
+          }
+
+          const enquiries = await window.KISSAN_API.getEnquiries();
+          if (Array.isArray(enquiries) && enquiries.length > 0) {
+            EnquiriesController.saveAllLocal(enquiries);
+          }
+
+          const scans = await window.KISSAN_API.getAIScans();
+          if (Array.isArray(scans) && scans.length > 0) {
+            AIDoctorController.saveAllLocal(scans);
+          }
+        }
+      } catch (e) {}
+    }
+  };
+
+  // Initial Auto-Sync from server
+  setTimeout(() => CloudSyncEngine.syncAll(), 100);
+
   // ==================== OTP AUTHENTICATION ENGINE ====================
   const OTPEngine = {
     generate(mobileOrId, purpose = 'login') {
       const cleanPhone = normalizePhone(mobileOrId);
       const identifier = cleanPhone || String(mobileOrId).trim().toLowerCase();
       
-      // Cryptographically random 6-digit OTP
       const code = String(Math.floor(100000 + Math.random() * 900000));
       const expiresAt = Date.now() + (5 * 60 * 1000); // 5 mins
 
@@ -313,8 +298,18 @@
       };
       list.unshift(newProd);
       setRaw(KEYS.PRODUCTS, list);
-      CloudSyncEngine.syncPush('products', list);
       return newProd;
+    },
+    addOrUpdateLocal(prod) {
+      const list = this.getAll();
+      const idx = list.findIndex(p => p.id === prod.id);
+      if (idx !== -1) {
+        list[idx] = { ...list[idx], ...prod };
+      } else {
+        list.unshift(prod);
+      }
+      setRaw(KEYS.PRODUCTS, list);
+      return prod;
     },
     update(id, updatedData) {
       const list = this.getAll();
@@ -322,7 +317,9 @@
       if (idx !== -1) {
         list[idx] = { ...list[idx], ...updatedData };
         setRaw(KEYS.PRODUCTS, list);
-        CloudSyncEngine.syncPush('products', list);
+        if (window.KISSAN_API) {
+          window.KISSAN_API.saveProduct(list[idx]);
+        }
         return list[idx];
       }
       return null;
@@ -331,12 +328,14 @@
       let list = this.getAll();
       list = list.filter(p => p.id !== id);
       setRaw(KEYS.PRODUCTS, list);
-      CloudSyncEngine.syncPush('products', list);
+      return true;
+    },
+    saveAllLocal(list) {
+      setRaw(KEYS.PRODUCTS, list);
       return true;
     },
     saveAll(list) {
       setRaw(KEYS.PRODUCTS, list);
-      CloudSyncEngine.syncPush('products', list);
       return true;
     }
   };
@@ -350,29 +349,36 @@
       return this.getAllLocal();
     },
     getById(idOrMobile) {
+      if (!idOrMobile) return null;
       const cleanPhone = normalizePhone(idOrMobile);
       const cleanId = String(idOrMobile).trim().toLowerCase();
 
       return this.getAll().find(f => {
         const fPhone = normalizePhone(f.mobile);
         return (cleanPhone && fPhone === cleanPhone) ||
-               f.id.toLowerCase() === cleanId ||
-               f.mobile.toLowerCase() === cleanId;
+               (f.id && f.id.toLowerCase() === cleanId) ||
+               (f.mobile && f.mobile.toLowerCase() === cleanId);
       }) || null;
     },
     add(farmer) {
       const list = this.getAll();
       const cleanMobile = normalizePhone(farmer.mobile) || String(farmer.mobile).trim();
       
-      const existing = list.find(f => normalizePhone(f.mobile) === cleanMobile);
-      if (existing) return existing;
+      const existingIdx = list.findIndex(f => normalizePhone(f.mobile) === cleanMobile);
+      if (existingIdx !== -1) {
+        list[existingIdx] = { ...list[existingIdx], ...farmer };
+        setRaw(KEYS.FARMERS, list);
+        return list[existingIdx];
+      }
 
       const nextId = `KIS-${1001 + list.length}`;
+      const pass = farmer.password || farmer.pin || (cleanMobile.length >= 4 ? cleanMobile.slice(-4) : '1234');
       const newFarmer = {
         id: farmer.id || nextId,
         name: String(farmer.name || 'Farmer').trim(),
         mobile: cleanMobile,
-        pin: farmer.pin ? String(farmer.pin).trim() : '1234',
+        pin: pass,
+        password: pass,
         village: String(farmer.village || 'Village Behra Sadat').trim(),
         landSize: String(farmer.landSize || 'Not Specified').trim(),
         crops: String(farmer.crops || 'Sugarcane, Wheat').trim(),
@@ -383,16 +389,31 @@
 
       list.unshift(newFarmer);
       setRaw(KEYS.FARMERS, list);
-      CloudSyncEngine.syncPush('farmers', list);
       return newFarmer;
+    },
+    addOrUpdateLocal(farmer) {
+      const list = this.getAll();
+      const cleanMobile = normalizePhone(farmer.mobile);
+      const cleanId = (farmer.id || '').toLowerCase();
+
+      const idx = list.findIndex(f => (cleanId && f.id && f.id.toLowerCase() === cleanId) || (cleanMobile && normalizePhone(f.mobile) === cleanMobile));
+      if (idx !== -1) {
+        list[idx] = { ...list[idx], ...farmer };
+      } else {
+        list.unshift(farmer);
+      }
+      setRaw(KEYS.FARMERS, list);
+      return farmer;
     },
     update(id, updatedData) {
       const list = this.getAll();
       const idx = list.findIndex(f => f.id === id);
       if (idx !== -1) {
         list[idx] = { ...list[idx], ...updatedData };
+        if (updatedData.password) {
+          list[idx].pin = updatedData.password;
+        }
         setRaw(KEYS.FARMERS, list);
-        CloudSyncEngine.syncPush('farmers', list);
         return list[idx];
       }
       return null;
@@ -401,8 +422,20 @@
       let list = this.getAll();
       list = list.filter(f => f.id !== id);
       setRaw(KEYS.FARMERS, list);
-      CloudSyncEngine.syncPush('farmers', list);
       return true;
+    },
+    saveAllLocal(list) {
+      setRaw(KEYS.FARMERS, list);
+      return true;
+    },
+    addKhataEntryLocal(farmerId, tx) {
+      const list = this.getAll();
+      const farmer = list.find(f => f.id === farmerId);
+      if (!farmer) return false;
+      if (!farmer.khata) farmer.khata = [];
+      farmer.khata.unshift(tx);
+      setRaw(KEYS.FARMERS, list);
+      return tx;
     },
     addKhataEntry(farmerId, entry) {
       const list = this.getAll();
@@ -412,7 +445,7 @@
       if (!farmer.khata) farmer.khata = [];
 
       const tx = {
-        id: 'tx_' + Date.now(),
+        id: entry.id || ('tx_' + Date.now()),
         date: entry.date || new Date().toISOString().slice(0, 10),
         type: entry.type || 'purchase',
         product: String(entry.product || 'Agri Inputs').trim(),
@@ -425,8 +458,23 @@
 
       farmer.khata.unshift(tx);
       setRaw(KEYS.FARMERS, list);
-      CloudSyncEngine.syncPush('farmers', list);
       return tx;
+    },
+    loginWithPassword(mobileOrId, password) {
+      const cleanPass = String(password || '').trim();
+      const farmer = this.getById(mobileOrId);
+
+      if (!farmer) {
+        return { success: false, message: 'किसान खाता नहीं मिला (Farmer account not found).' };
+      }
+
+      const fPass = String(farmer.password || farmer.pin || '').trim();
+      if (fPass === cleanPass) {
+        sessionStorage.setItem('kissan_active_farmer', JSON.stringify(farmer));
+        return { success: true, farmer, message: 'लॉगिन सफल (Login successful)!' };
+      }
+
+      return { success: false, message: 'गलत पासवर्ड (Incorrect password). कृपया सही पासवर्ड दर्ज करें।' };
     },
     loginWithOTP(mobileOrId, otpCode) {
       const otpRes = OTPEngine.verify(mobileOrId, otpCode);
@@ -436,7 +484,6 @@
       const cleanPhone = normalizePhone(mobileOrId);
 
       if (!farmer && cleanPhone.length === 10) {
-        // Auto-register new farmer profile
         farmer = this.add({
           name: 'Farmer (' + cleanPhone.slice(-4) + ')',
           mobile: cleanPhone,
@@ -490,7 +537,6 @@
 
       invoices.unshift(newInv);
       setRaw(KEYS.INVOICES, invoices);
-      CloudSyncEngine.syncPush('invoices', invoices);
 
       if (newInv.farmerId && newInv.farmerId.startsWith('KIS-')) {
         const itemSummary = newInv.items.map(i => `${i.name} (x${i.qty})`).join(', ');
@@ -506,11 +552,25 @@
 
       return newInv;
     },
+    addLocal(inv) {
+      const invoices = this.getAll();
+      const idx = invoices.findIndex(i => i.id === inv.id);
+      if (idx !== -1) {
+        invoices[idx] = { ...invoices[idx], ...inv };
+      } else {
+        invoices.unshift(inv);
+      }
+      setRaw(KEYS.INVOICES, invoices);
+      return inv;
+    },
     delete(id) {
       let list = this.getAll();
       list = list.filter(inv => inv.id !== id);
       setRaw(KEYS.INVOICES, list);
-      CloudSyncEngine.syncPush('invoices', list);
+      return true;
+    },
+    saveAllLocal(list) {
+      setRaw(KEYS.INVOICES, list);
       return true;
     }
   };
@@ -523,20 +583,32 @@
     log(scanData) {
       const scans = this.getAll();
       const newScan = {
-        id: 'scan_' + Date.now(),
-        date: new Date().toISOString(),
+        id: scanData.id || ('scan_' + Date.now()),
+        date: scanData.date || new Date().toISOString().substring(0, 16).replace('T', ' '),
         crop: scanData.crop || 'general',
         cropName: scanData.cropNameEn || scanData.crop || 'General Crop',
         disease: scanData.diseaseNameEn || scanData.disease || 'Detected Disease',
         confidence: scanData.confidence || '95%',
-        recommendedMedicine: scanData.recommendedProduct || 'Agri Input',
-        dosage: scanData.dosageEn || 'As per package',
+        recommendedMedicine: scanData.recommendedProduct || scanData.recommendedMedicine || 'Agri Input',
+        dosage: scanData.dosageEn || scanData.dosage || 'As per package',
         source: scanData.source || 'Online Scan'
       };
       scans.unshift(newScan);
       if (scans.length > 200) scans.length = 200;
       setRaw(KEYS.AI_SCANS, scans);
       return newScan;
+    },
+    addLocal(scan) {
+      const scans = this.getAll();
+      const idx = scans.findIndex(s => s.id === scan.id);
+      if (idx === -1) scans.unshift(scan);
+      if (scans.length > 200) scans.length = 200;
+      setRaw(KEYS.AI_SCANS, scans);
+      return scan;
+    },
+    saveAllLocal(list) {
+      setRaw(KEYS.AI_SCANS, list);
+      return true;
     }
   };
 
@@ -553,7 +625,7 @@
         query: query.trim().toLowerCase(),
         category,
         timestamp: new Date().toISOString(),
-        count
+        resultCount: count
       });
       if (logs.length > 200) logs.length = 200;
       setRaw(KEYS.SEARCH_LOGS, logs);
@@ -562,7 +634,7 @@
       const logs = this.getAll();
       const counts = {};
       logs.forEach(l => {
-        const q = l.query.toLowerCase();
+        const q = (l.query || '').toLowerCase();
         counts[q] = (counts[q] || 0) + 1;
       });
       return Object.keys(counts)
@@ -583,16 +655,35 @@
     add(enquiry) {
       const list = this.getAll();
       const newEnq = {
-        id: 'enq_' + Date.now(),
-        date: new Date().toISOString(),
+        id: enquiry.id || ('enq_' + Date.now()),
+        date: enquiry.date || new Date().toISOString().substring(0, 16).replace('T', ' '),
         name: String(enquiry.name || 'Anonymous').trim(),
+        phone: String(enquiry.phone || enquiry.mobile || '').trim(),
         crop: String(enquiry.crop || 'Not specified').trim(),
         message: String(enquiry.message || '').trim(),
-        status: 'New'
+        status: enquiry.status || 'New'
       };
       list.unshift(newEnq);
       setRaw(KEYS.ENQUIRIES, list);
       return newEnq;
+    },
+    addLocal(enq) {
+      const list = this.getAll();
+      const idx = list.findIndex(e => e.id === enq.id);
+      if (idx !== -1) list[idx] = { ...list[idx], ...enq };
+      else list.unshift(enq);
+      setRaw(KEYS.ENQUIRIES, list);
+      return enq;
+    },
+    delete(id) {
+      let list = this.getAll();
+      list = list.filter(e => e.id !== id);
+      setRaw(KEYS.ENQUIRIES, list);
+      return true;
+    },
+    saveAllLocal(list) {
+      setRaw(KEYS.ENQUIRIES, list);
+      return true;
     }
   };
 
@@ -616,7 +707,7 @@
         meta: {
           app: 'M/S KISSAN Pesticides & Seed Store Database',
           exportTimestamp: new Date().toISOString(),
-          version: '3.1-CloudEnterprise',
+          version: '3.2-DatabaseSync',
           generatedBy: 'Admin Portal'
         },
         settings: SettingsController.get(),
@@ -643,18 +734,12 @@
       try {
         if (!jsonData || typeof jsonData !== 'object') throw new Error('Invalid JSON format');
 
-        if (Array.isArray(jsonData.products)) ProductsController.saveAll(jsonData.products);
-        if (Array.isArray(jsonData.farmers)) {
-          setRaw(KEYS.FARMERS, jsonData.farmers);
-          CloudSyncEngine.syncPush('farmers', jsonData.farmers);
-        }
-        if (Array.isArray(jsonData.invoices)) {
-          setRaw(KEYS.INVOICES, jsonData.invoices);
-          CloudSyncEngine.syncPush('invoices', jsonData.invoices);
-        }
-        if (Array.isArray(jsonData.aiScans)) setRaw(KEYS.AI_SCANS, jsonData.aiScans);
+        if (Array.isArray(jsonData.products)) ProductsController.saveAllLocal(jsonData.products);
+        if (Array.isArray(jsonData.farmers)) FarmersController.saveAllLocal(jsonData.farmers);
+        if (Array.isArray(jsonData.invoices)) InvoicesController.saveAllLocal(jsonData.invoices);
+        if (Array.isArray(jsonData.aiScans)) AIDoctorController.saveAllLocal(jsonData.aiScans);
         if (Array.isArray(jsonData.searchLogs)) setRaw(KEYS.SEARCH_LOGS, jsonData.searchLogs);
-        if (Array.isArray(jsonData.enquiries)) setRaw(KEYS.ENQUIRIES, jsonData.enquiries);
+        if (Array.isArray(jsonData.enquiries)) EnquiriesController.saveAllLocal(jsonData.enquiries);
         if (jsonData.settings && typeof jsonData.settings === 'object') SettingsController.update(jsonData.settings);
 
         return { success: true, message: 'Master database restored & synchronized successfully!' };
@@ -682,6 +767,11 @@
         headers = ['Product ID', 'Name', 'Brand', 'Category', 'Crops', 'Target', 'Dosage', 'Pack Sizes', 'Stock Status'];
         rows = ProductsController.getAll().map(p => [
           p.id, p.name, p.brand, p.category, p.crops, p.target, p.dosage, p.packSizes, p.inStock ? 'In Stock' : 'Out of Stock'
+        ]);
+      } else if (tableName === 'enquiries') {
+        headers = ['Enquiry ID', 'Date', 'Name', 'Phone', 'Crop', 'Message', 'Status'];
+        rows = EnquiriesController.getAll().map(e => [
+          e.id, e.date, e.name, e.phone, e.crop, e.message, e.status
         ]);
       }
 

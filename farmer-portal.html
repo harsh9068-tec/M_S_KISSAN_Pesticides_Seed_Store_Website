@@ -26,7 +26,9 @@
           <span class="settings-icon">⚙️</span>
           <span class="settings-label">Settings</span>
         </button>
-        <a href="index.html" class="btn btn-outline">🏪 मुख्य वेबसाइट (Main Store)</a>
+        <button type="button" id="openChangePassModalBtn" class="btn btn-outline hidden">🔑 पासवर्ड बदलें</button>
+        <button type="button" id="refreshFarmerDataBtn" class="btn btn-outline hidden" title="ताज़ा डेटा प्राप्त करें">🔄 रिफ्रेश</button>
+        <a href="index.html" class="btn btn-outline">🏪 मुख्य स्टोर (Main Store)</a>
         <button id="farmerLogoutBtn" class="btn btn-danger hidden">🚪 लॉगआउट (Logout)</button>
       </div>
     </div>
@@ -91,11 +93,46 @@
             <span class="setting-nav-icon">🔑</span>
             <div class="setting-nav-info">
               <strong>Store Owner & Staff Portal (ओनर पोर्टल)</strong>
-              <small>POS Billing, Inventory & Analytics</small>
+              <small>POS Billing, Inventory & Central Management</small>
             </div>
             <span class="setting-nav-arrow">→</span>
           </a>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHANGE PASSWORD MODAL -->
+  <div id="changePassModal" class="settings-modal hidden" role="dialog" aria-modal="true">
+    <div class="settings-modal-backdrop" id="closeChangePassBackdrop"></div>
+    <div class="settings-card" style="max-width:440px;">
+      <div class="settings-card-header">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="font-size:22px;">🔑</span>
+          <div>
+            <h3>पासवर्ड बदलें (Change Password)</h3>
+            <small id="changePassFarmerMeta">अपने किसान खाते का पासवर्ड अपडेट करें</small>
+          </div>
+        </div>
+        <button type="button" id="closeChangePassBtn" class="settings-close-btn">✕</button>
+      </div>
+      <div class="settings-card-body">
+        <form id="changePasswordForm">
+          <div class="form-group" style="margin-bottom:12px;">
+            <label for="oldPasswordInput">वर्तमान पासवर्ड (Current Password) *</label>
+            <input type="password" id="oldPasswordInput" placeholder="वर्तमान पासवर्ड" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #c8d8c6;" />
+          </div>
+          <div class="form-group" style="margin-bottom:12px;">
+            <label for="newPasswordInput">नया पासवर्ड (New Password) *</label>
+            <input type="password" id="newPasswordInput" placeholder="न्यूनतम 4 अक्षर/अंक" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #c8d8c6;" />
+          </div>
+          <div class="form-group" style="margin-bottom:16px;">
+            <label for="confirmNewPassInput">नया पासवर्ड पुनः दर्ज करें (Confirm New Password) *</label>
+            <input type="password" id="confirmNewPassInput" placeholder="पासवर्ड दोहराएं" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #c8d8c6;" />
+          </div>
+          <button type="submit" class="btn btn-primary btn-full">💾 पासवर्ड सुरक्षित करें (Update Password)</button>
+          <p id="changePassMsg" class="form-error" style="margin-top:10px; font-size:12.5px;"></p>
+        </form>
       </div>
     </div>
   </div>
@@ -115,81 +152,125 @@
           <button class="auth-tab" id="tabRegisterBtn">नया किसान पंजीकरण (Register)</button>
         </div>
 
-        <!-- OTP-Based Login Form -->
+        <!-- Password-Based Primary Login Form -->
         <form id="farmerLoginForm" class="portal-form">
-          <!-- Step 1: Mobile / ID Input -->
-          <div id="otpStep1">
+          <!-- Direct Password Login Mode -->
+          <div id="passwordLoginBlock">
             <div class="form-group">
               <label for="loginMobileOrId">मोबाइल नंबर या किसान आईडी (Mobile or Farmer ID) *</label>
-              <input type="tel" id="loginMobileOrId" maxlength="10" placeholder="उदा. 9897123456" required autofocus />
+              <input type="tel" id="loginMobileOrId" placeholder="उदा. 9897123456 या KIS-1001" required autofocus />
             </div>
-            <button type="button" id="getOtpBtn" class="btn btn-primary btn-full">📩 ओटीपी पाएं (Get OTP) →</button>
-            <div class="demo-hints" style="margin-top:12px;">
-              <small>🔒 <b>सुरक्षित लॉगिन:</b> आपके पंजीकृत मोबाइल नंबर पर 6-अंकों का गुप्त ओटीपी भेजा जाएगा।</small>
+
+            <div class="form-group">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <label for="loginPassword">पासवर्ड (Password / PIN) *</label>
+                <button type="button" id="toggleLoginPassVisibility" style="background:none; border:none; color:var(--green); font-size:12px; cursor:pointer;">👁️ पासवर्ड देखें</button>
+              </div>
+              <input type="password" id="loginPassword" placeholder="अपना गुप्त पासवर्ड दर्ज करें" required style="padding:11px 14px; font-size:14.5px;" />
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-full" style="margin-top:6px; font-size:15px;">
+              🌾 लॉगिन करें (Login to Farmer Portal) →
+            </button>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px;">
+              <button type="button" id="toggleOtpModeBtn" style="background:none; border:none; color:var(--green); font-size:12.5px; cursor:pointer; text-decoration:underline;">
+                📩 ओटीपी से लॉगिन करें (Login with OTP)
+              </button>
+              <a href="https://wa.me/919760153116?text=नमस्ते%20किसान%20स्टोर,%20मैं%20अपना%20किसान%20पासवर्ड%20भूल%20गया%20हूँ।%20कृपया%20पासवर्ड%20रीसेट%20में%20मदद%20करें।" target="_blank" style="color:var(--muted); font-size:12px; text-decoration:underline;">
+                पासवर्ड भूल गए?
+              </a>
+            </div>
+
+            <div class="demo-hints" style="margin-top:14px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:10px 12px;">
+              <small style="color:#166534; display:block; font-size:12px;">
+                🔒 <b>सुरक्षित डेटाबेस लॉगिन:</b> आपका पासवर्ड केंद्रीय डेटाबेस में सुरक्षित है। डेमो लॉगिन: <b>9897123456</b> (पासवर्ड: <b>1122</b>)
+              </small>
             </div>
           </div>
 
-          <!-- Step 2: Enter 6-Digit OTP (Hidden initially) -->
-          <div id="otpStep2" class="hidden">
-            
-            <div class="otp-sent-banner" style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; padding:12px; display:flex; align-items:center; gap:12px; margin-bottom:14px;">
-              <span style="font-size:26px;">📲</span>
-              <div style="flex:1;">
-                <strong style="display:block; font-size:13px; color:#15803d;">ओटीपी आपके मोबाइल पर भेजा गया</strong>
-                <small id="otpSentMobileLabel" style="display:block; font-size:12px; color:#4b5563; font-family:monospace; margin-top:2px;">+91 98971 •••••</small>
+          <!-- Secondary OTP Login Mode (Hidden by default) -->
+          <div id="otpLoginBlock" class="hidden">
+            <!-- OTP Step 1 -->
+            <div id="otpStep1">
+              <div class="form-group">
+                <label for="otpMobileInput">पंजीकृत मोबाइल नंबर (Registered Mobile) *</label>
+                <input type="tel" id="otpMobileInput" maxlength="10" placeholder="उदा. 9897123456" />
+              </div>
+              <button type="button" id="getOtpBtn" class="btn btn-primary btn-full">📩 ओटीपी कोड जनरेट करें →</button>
+            </div>
+
+            <!-- OTP Step 2 -->
+            <div id="otpStep2" class="hidden">
+              <div class="otp-sent-banner" style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; padding:12px; display:flex; align-items:center; gap:12px; margin-bottom:14px;">
+                <span style="font-size:26px;">📲</span>
+                <div style="flex:1;">
+                  <strong style="display:block; font-size:13px; color:#15803d;">ओटीपी कोड भेजा गया</strong>
+                  <small id="otpSentMobileLabel" style="display:block; font-size:12px; color:#4b5563; font-family:monospace; margin-top:2px;">+91 98971 •••••</small>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="loginOtpInput">6-अंकों का ओटीपी दर्ज करें (Enter 6-Digit OTP) *</label>
+                <input type="password" id="loginOtpInput" maxlength="6" placeholder="• • • • • •" style="letter-spacing:6px; font-size:22px; text-align:center; font-weight:800;" autocomplete="one-time-code" />
+              </div>
+
+              <button type="button" id="verifyOtpBtn" class="btn btn-primary btn-full" style="margin-top:6px;">सत्यापित करें व लॉगिन करें →</button>
+
+              <div class="otp-actions-row" style="margin-top:12px; display:flex; gap:8px; justify-content:space-between; align-items:center;">
+                <button type="button" id="resendOtpBtn" class="btn btn-outline" style="padding:7px 12px; font-size:12px;" disabled>
+                  ⏱️ पुनः भेजें (<span id="resendCountdown">30</span>s)
+                </button>
               </div>
             </div>
 
-            <div class="form-group">
-              <label for="loginOtpInput">मोबाइल पर प्राप्त 6-अंकों का ओटीपी दर्ज करें (Enter 6-Digit OTP) *</label>
-              <input type="password" id="loginOtpInput" maxlength="6" placeholder="• • • • • •" style="letter-spacing:6px; font-size:22px; text-align:center; font-weight:800;" autocomplete="one-time-code" required />
-            </div>
-
-            <button type="submit" class="btn btn-primary btn-full" style="margin-top:6px;">सत्यापित करें व लॉगिन करें (Verify & Login) →</button>
-
-            <div class="otp-actions-row" style="margin-top:12px; display:flex; gap:8px; justify-content:space-between; align-items:center;">
-              <a id="openWaOtpBtn" href="#" target="_blank" class="btn btn-whatsapp" style="padding:7px 12px; font-size:12px; flex:1; text-align:center;">
-                💬 व्हाट्सएप पर ओटीपी प्राप्त करें
-              </a>
-              <button type="button" id="resendOtpBtn" class="btn btn-outline" style="padding:7px 12px; font-size:12px;" disabled>
-                ⏱️ पुनः भेजें (<span id="resendCountdown">30</span>s)
-              </button>
-            </div>
-            
-            <button type="button" id="changeMobileBtn" style="display:block; margin:14px auto 0; font-size:12px; color:var(--muted); background:none; border:none; cursor:pointer; text-decoration:underline;">
-              ← दूसरा मोबाइल नंबर दर्ज करें (Change Mobile)
+            <button type="button" id="backToPasswordLoginBtn" style="display:block; margin:14px auto 0; font-size:12.5px; color:var(--green); background:none; border:none; cursor:pointer; text-decoration:underline;">
+              ← पासवर्ड द्वारा लॉगिन पर वापस जाएं (Back to Password Login)
             </button>
           </div>
 
-          <p id="loginError" class="form-error"></p>
+          <p id="loginError" class="form-error" style="margin-top:10px;"></p>
         </form>
 
-        <!-- Register Form (Hidden by default) -->
+        <!-- Register Form (Central DB Synced) -->
         <form id="farmerRegisterForm" class="portal-form hidden">
           <div class="form-grid">
             <div class="form-group">
-              <label for="regName">किसान का पूरा नाम *</label>
+              <label for="regName">किसान का पूरा नाम (Farmer Name) *</label>
               <input type="text" id="regName" placeholder="उदा. रामेश्वर सिंह" required />
             </div>
             <div class="form-group">
-              <label for="regMobile">मोबाइल नंबर *</label>
-              <input type="tel" id="regMobile" maxlength="10" placeholder="10 अंकों का नंबर" required />
+              <label for="regMobile">मोबाइल नंबर (Mobile Number) *</label>
+              <input type="tel" id="regMobile" maxlength="10" placeholder="10 अंकों का मोबाइल नंबर" required />
             </div>
             <div class="form-group">
-              <label for="regVillage">गांव / पता *</label>
+              <label for="regVillage">गांव / पता (Village / Address) *</label>
               <input type="text" id="regVillage" placeholder="उदा. ग्राम बेहड़ा सादात / मोरना" required />
             </div>
             <div class="form-group">
-              <label for="regLand">कुल खेती (जमीन / बीघा)</label>
-              <input type="text" id="regLand" placeholder="उदा. 12 बीघा / 2 एकड़" />
+              <label for="regLand">कुल खेती (Land Size)</label>
+              <input type="text" id="regLand" placeholder="उदा. 15 बीघा / 3 एकड़" />
             </div>
             <div class="form-group full-width">
-              <label for="regCrops">मुख्य फसलें *</label>
+              <label for="regCrops">मुख्य फसलें (Crops) *</label>
               <input type="text" id="regCrops" placeholder="उदा. गन्ना, गेहूं, धान, सरसों, टमाटर" required />
             </div>
+
+            <!-- Secure Password Registration -->
+            <div class="form-group">
+              <label for="regPassword">नया पासवर्ड बनाएं (Create Password) *</label>
+              <input type="password" id="regPassword" placeholder="न्यूनतम 4 अक्षर/अंक" required style="padding:10px; border-radius:8px; border:1px solid #c8d8c6;" />
+            </div>
+            <div class="form-group">
+              <label for="regConfirmPassword">पासवर्ड पुनः दर्ज करें (Confirm Password) *</label>
+              <input type="password" id="regConfirmPassword" placeholder="पासवर्ड की पुष्टि करें" required style="padding:10px; border-radius:8px; border:1px solid #c8d8c6;" />
+            </div>
           </div>
-          <button type="submit" class="btn btn-primary btn-full">पंजीकरण करें (Register Now) →</button>
-          <p id="registerError" class="form-error"></p>
+
+          <button type="submit" class="btn btn-primary btn-full" style="margin-top:10px; font-size:15px;">
+            🌾 डेटाबेस में पंजीकरण करें (Register Farmer) →
+          </button>
+          <p id="registerError" class="form-error" style="margin-top:10px;"></p>
         </form>
 
       </div>
@@ -209,7 +290,7 @@
             <p>मैसर्स किसान पेस्टिसाइड्स एवं बीज स्टोर, बेहड़ा सादात (मोरना) में आपका स्वागत है।</p>
           </div>
         </div>
-        <div class="welcome-right">
+        <div class="welcome-right" style="display:flex; gap:10px; flex-wrap:wrap;">
           <button id="directWaBtn" class="btn btn-whatsapp">💬 अपनी फसल सलाह पूछें (WhatsApp)</button>
         </div>
       </div>
@@ -254,7 +335,10 @@
 
           <!-- Khata Overview Stats -->
           <div class="khata-overview-card">
-            <h3>📊 खाता स्थिति (Khata Status)</h3>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <h3 style="font-size:16px;">📊 खाता स्थिति (Khata Status)</h3>
+              <span style="font-size:11px; background:#e0f2fe; color:#0369a1; padding:3px 8px; border-radius:12px; font-weight:700;">🟢 लाइव सर्वर सिंक</span>
+            </div>
             <div class="khata-stats">
               <div class="khata-stat-box">
                 <small>कुल खरीद (Purchases)</small>
@@ -274,8 +358,11 @@
           <!-- Khata Ledger Table -->
           <div class="panel-card">
             <div class="panel-header">
-              <h3>📜 पिछली खरीद एवं खाता विवरण (Purchase History)</h3>
-              <small id="recordCountLabel">0 रिकॉर्ड</small>
+              <div>
+                <h3>📜 पिछली खरीद एवं खाता विवरण (Purchase History)</h3>
+                <small>ओनर पोर्टल से दर्ज सभी बिल एवं जमा रसीदें</small>
+              </div>
+              <small id="recordCountLabel" style="font-weight:700; color:var(--green);">0 रिकॉर्ड</small>
             </div>
             
             <div class="table-responsive">
@@ -298,7 +385,7 @@
             </div>
 
             <div id="noKhataMsg" class="no-records hidden">
-              <p>अभी तक कोई खरीद रिकॉर्ड दर्ज नहीं है। दुकान पर खरीदारी करने पर यहाँ विवरण दिखेगा।</p>
+              <p>अभी तक कोई खरीद रिकॉर्ड दर्ज नहीं है। दुकान पर खरीदारी करने पर यहाँ रसीद व विवरण दिखेगा।</p>
             </div>
           </div>
 
