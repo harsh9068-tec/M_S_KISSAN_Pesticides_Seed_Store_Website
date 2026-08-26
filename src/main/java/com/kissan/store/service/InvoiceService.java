@@ -2,6 +2,7 @@ package com.kissan.store.service;
 
 import com.kissan.store.model.Invoice;
 import com.kissan.store.model.InvoiceItem;
+import com.kissan.store.model.KhataTransaction;
 import com.kissan.store.repository.InvoiceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
