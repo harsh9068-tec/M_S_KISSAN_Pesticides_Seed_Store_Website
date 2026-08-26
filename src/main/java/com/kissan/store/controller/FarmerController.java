@@ -47,63 +47,10 @@ public class FarmerController {
         return ResponseEntity.ok(farmerService.registerOrSaveFarmer(farmer));
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<?> loginWithPassword(@RequestBody Map<String, String> body) {
-        String mobileOrId = body.get("mobileOrId");
-        if (mobileOrId == null || mobileOrId.trim().isEmpty()) {
-            mobileOrId = body.get("phoneOrId");
-        }
-        String password = body.get("password");
-        if (password == null || password.trim().isEmpty()) {
-            password = body.get("pin");
-        }
-
-        if (mobileOrId == null || password == null) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Mobile/Farmer ID and Password are required."));
-        }
-
-        return farmerService.loginWithPassword(mobileOrId, password)
-                .map(f -> ResponseEntity.ok(Map.of(
-                        "success", true,
-                        "message", "Login successful!",
-                        "farmer", f,
-                        "token", "kissan_auth_token_" + f.getId()
-                )))
-                .orElse(ResponseEntity.status(401).body(Map.of(
-                        "success", false,
-                        "message", "Invalid Mobile/Farmer ID or Password."
-                )));
-    }
-
-    @PostMapping("/reset-password")
-    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> body) {
-        String farmerIdOrMobile = body.get("farmerId");
-        if (farmerIdOrMobile == null || farmerIdOrMobile.trim().isEmpty()) {
-            farmerIdOrMobile = body.get("mobile");
-        }
-        if (farmerIdOrMobile == null || farmerIdOrMobile.trim().isEmpty()) {
-            farmerIdOrMobile = body.get("mobileOrId");
-        }
-        String newPassword = body.get("newPassword");
-        if (newPassword == null || newPassword.trim().isEmpty()) {
-            newPassword = body.get("password");
-        }
-
-        if (farmerIdOrMobile == null || newPassword == null || newPassword.trim().isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Farmer ID and new password are required."));
-        }
-
-        boolean updated = farmerService.resetPassword(farmerIdOrMobile, newPassword);
-        if (updated) {
-            return ResponseEntity.ok(Map.of("success", true, "message", "Password updated successfully in database."));
-        } else {
-            return ResponseEntity.status(404).body(Map.of("success", false, "message", "Farmer not found."));
-        }
-    }
-
     @PutMapping("/{id}")
     public ResponseEntity<Farmer> updateFarmer(@PathVariable String id, @RequestBody Farmer farmer) {
-        return ResponseEntity.ok(farmerService.updateFarmer(id, farmer));
+        farmer.setId(id);
+        return ResponseEntity.ok(farmerService.registerOrSaveFarmer(farmer));
     }
 
     @DeleteMapping("/{id}")
@@ -124,14 +71,11 @@ public class FarmerController {
 
         Farmer farmer = farmerService.getFarmerByIdOrMobile(phoneOrId).orElse(null);
         if (farmer == null) {
-            String cleanPhone = phoneOrId.replaceAll("\\D", "");
-            String defPass = cleanPhone.length() >= 4 ? cleanPhone.substring(cleanPhone.length() - 4) : "1234";
             farmer = new Farmer(
                     "KIS-" + (System.currentTimeMillis() % 10000),
                     "Farmer " + (phoneOrId.length() >= 4 ? phoneOrId.substring(phoneOrId.length() - 4) : phoneOrId),
                     phoneOrId,
-                    defPass,
-                    defPass,
+                    "1234",
                     "Village Behra Sadat",
                     "5 Acres",
                     "Sugarcane, Wheat",

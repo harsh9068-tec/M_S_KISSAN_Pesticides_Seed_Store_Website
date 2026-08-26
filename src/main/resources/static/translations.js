@@ -415,13 +415,12 @@ const TRANSLATIONS = {
 const LANG_KEY = 'kissan_preferred_language';
 
 function getCurrentLanguage() {
-  return localStorage.getItem('kissan_lang') || localStorage.getItem(LANG_KEY) || 'hi';
+  return localStorage.getItem(LANG_KEY) || 'en';
 }
 
 function setLanguage(lang) {
   if (lang === 'hi' || lang === 'en') {
     localStorage.setItem(LANG_KEY, lang);
-    localStorage.setItem('kissan_lang', lang);
   }
 }
 

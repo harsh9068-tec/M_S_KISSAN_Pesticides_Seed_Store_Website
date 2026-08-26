@@ -32,9 +32,4 @@ public class AIDoctorController {
     public ResponseEntity<List<AIScanLog>> getAllScans() {
         return ResponseEntity.ok(aiDoctorService.getAllScanLogs());
     }
-
-    @PostMapping("/scans")
-    public ResponseEntity<AIScanLog> saveScanLog(@RequestBody AIScanLog log) {
-        return ResponseEntity.ok(aiDoctorService.logScan(log));
-    }
 }

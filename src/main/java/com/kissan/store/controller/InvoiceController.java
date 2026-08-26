@@ -5,7 +5,6 @@ import com.kissan.store.service.InvoiceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -42,11 +41,5 @@ public class InvoiceController {
     @PostMapping
     public ResponseEntity<Invoice> createInvoice(@RequestBody Invoice invoice) {
         return ResponseEntity.ok(invoiceService.createInvoice(invoice));
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteInvoice(@PathVariable String id) {
-        invoiceService.deleteInvoice(id);
-        return ResponseEntity.noContent().build();
     }
 }

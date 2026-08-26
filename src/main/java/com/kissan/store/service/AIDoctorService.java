@@ -77,16 +77,6 @@ public class AIDoctorService {
         return r;
     }
 
-    public AIScanLog logScan(AIScanLog log) {
-        if (log.getId() == null || log.getId().isEmpty()) {
-            log.setId("SCAN-" + System.currentTimeMillis());
-        }
-        if (log.getDate() == null || log.getDate().isEmpty()) {
-            log.setDate(LocalDateTime.now().toString().substring(0, 16).replace("T", " "));
-        }
-        return aiScanLogRepository.save(log);
-    }
-
     public List<AIScanLog> getAllScanLogs() {
         return aiScanLogRepository.findAll();
     }

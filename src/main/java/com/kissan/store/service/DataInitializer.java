@@ -66,18 +66,10 @@ public class DataInitializer implements CommandLineRunner {
     private void seedFarmers() {
         if (farmerRepository.count() > 0) return;
 
-        Farmer f1 = new Farmer("KIS-1001", "Chaudhary Ramesh Kumar", "9897123456", "1122", "1122", "Village Behra Sadat", "15 Bigha", "Sugarcane, Wheat, Mustard", "2025-11-10", "Regular customer for sugarcane borer spray.");
+        Farmer f1 = new Farmer("KIS-1001", "Chaudhary Ramesh Kumar", "9897123456", "1122", "Village Behra Sadat", "15 Bigha", "Sugarcane, Wheat, Mustard", "2025-11-10", "Regular customer for sugarcane borer spray.");
         KhataTransaction tx1 = new KhataTransaction("tx_101", "2026-08-15", "purchase", "Incipio (100ml) + Isabion (500ml)", "2 Packs", 1850.0, 1850.0, 0.0, "Sugarcane early shoot borer spray", f1);
         f1.getKhata().add(tx1);
 
-        Farmer f2 = new Farmer("KIS-1002", "Sardar Gurpreet Singh", "9760987654", "3344", "3344", "Post Morna, Jansath", "25 Bigha", "Wheat, Paddy, Sugarcane", "2026-01-15", "Certified wheat seed advance booking.");
-        KhataTransaction tx2 = new KhataTransaction("tx_102", "2026-08-18", "purchase", "Hybrid Wheat Seeds (Super 303 - 40kg)", "3 Bags", 4800.0, 4800.0, 0.0, "Advance booking for Rabi season", f2);
-        f2.getKhata().add(tx2);
-
-        Farmer f3 = new Farmer("KIS-1003", "Virendra Singh Tyagi", "9837554433", "5566", "5566", "Behra Sadat", "10 Bigha", "Sugarcane, Tomato, Chilli", "2026-03-20", "Tomato fruit rot & sugarcane fertilizer.");
-        KhataTransaction tx3 = new KhataTransaction("tx_103", "2026-08-20", "purchase", "Kavach Flo (500ml) + Simodis (100ml)", "2 Packs", 2100.0, 2100.0, 0.0, "Tomato early/late blight spray", f3);
-        f3.getKhata().add(tx3);
-
-        farmerRepository.saveAll(List.of(f1, f2, f3));
+        farmerRepository.save(f1);
     }
 }

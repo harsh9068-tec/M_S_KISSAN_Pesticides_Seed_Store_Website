@@ -1,97 +1,104 @@
-// ============================================================================
-// M/S KISSAN - STOREFRONT APP JAVASCRIPT
-// Dual-Language I18n, Dynamic Catalog, Central Database Sync & AI Crop Doctor
-// ============================================================================
+// M/S KISSAN Pesticides & Seed Store - Storefront Logic, Bilingual Engine & AI Crop Doctor
 
 document.addEventListener('DOMContentLoaded', () => {
-  const searchInput = document.getElementById('search');
-  const tabs = document.querySelectorAll('.tab');
-  const productGrid = document.querySelector('.product-grid');
-  const noResultsMsg = document.getElementById('noResults');
-  const langToggleBtn = document.getElementById('langToggleBtn');
-  const langLabel = document.getElementById('langLabel');
+  // Navigation & Mobile Menu
+  const menuToggle = document.querySelector('.menu-toggle');
+  const nav = document.querySelector('.nav');
 
+  menuToggle?.addEventListener('click', () => {
+    const open = nav.classList.toggle('open');
+    menuToggle.setAttribute('aria-expanded', String(open));
+  });
+
+  document.querySelectorAll('.nav a').forEach(link => {
+    link.addEventListener('click', () => nav.classList.remove('open'));
+  });
+
+  // State & Store Variables
   const waNumber = '919760153116';
-  let currentLang = localStorage.getItem('kissan_lang') || localStorage.getItem('kissan_preferred_language') || 'hi';
+  const productGrid = document.getElementById('productGrid');
+  const searchInput = document.getElementById('clientSearchInput');
+  const noResultsMsg = document.getElementById('clientNoResults');
+  const tabs = document.querySelectorAll('.tab');
+  const langToggleBtn = document.getElementById('langToggleBtn');
+  const langBtnLabel = document.getElementById('langBtnLabel');
+
   let activeCategory = 'all';
-  let products = [];
+  let currentLang = window.I18n ? window.I18n.getLang() : 'en';
+  let products = window.ProductStore ? window.ProductStore.getProducts() : [];
   let currentAiDiagnosis = null;
 
-  // ==================== BILINGUAL TRANSLATION ENGINE ====================
+  // ==================== BILINGUAL TRANSLATION LOGIC ====================
   function applyLanguage(lang) {
+    if (!window.I18n || !window.I18n.TRANSLATIONS[lang]) return;
+
     currentLang = lang;
-    localStorage.setItem('kissan_lang', lang);
-    localStorage.setItem('kissan_preferred_language', lang);
+    window.I18n.setLang(lang);
+    const dict = window.I18n.TRANSLATIONS[lang];
 
-    if (window.I18n && typeof window.I18n.setLang === 'function') {
-      window.I18n.setLang(lang);
-    }
-
-    if (langLabel) {
-      langLabel.textContent = lang === 'hi' ? 'English' : 'हिंदी';
-    }
-
-    if (!window.I18n) return;
-    const dict = window.I18n.TRANSLATIONS[lang] || {};
-
-    // 1. Translation Text & HTML Updates
+    // Update all elements with data-i18n attribute
     document.querySelectorAll('[data-i18n]').forEach(el => {
-      const key = el.getAttribute('data-i18n');
-      if (dict[key] !== undefined) {
-        const val = String(dict[key]);
-        // If translation contains HTML tags (e.g. <br>, <span>, <strong>), render with innerHTML so raw tags do not appear as text
-        if (val.includes('<') && val.includes('>')) {
-          el.innerHTML = val;
-        } else {
-          el.textContent = val;
-        }
-      }
-    });
-
-    // 2. Explicit HTML Content Updates
-    document.querySelectorAll('[data-i18n-html]').forEach(el => {
-      const key = el.getAttribute('data-i18n-html');
-      if (dict[key] !== undefined) {
+      const key = el.dataset.i18n;
+      if (dict[key]) {
         el.innerHTML = dict[key];
       }
     });
 
-    // 3. Placeholders Updates
-    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-      const key = el.getAttribute('data-i18n-placeholder');
-      if (dict[key] !== undefined) {
-        el.placeholder = dict[key];
-      }
-    });
-
-    // 4. Update segmented buttons in Theme / Settings Modal
-    if (window.ThemeManager && typeof window.ThemeManager.updateLangButtons === 'function') {
-      window.ThemeManager.updateLangButtons(lang);
+    // Update Input Placeholders
+    if (searchInput && dict.search_placeholder) {
+      searchInput.placeholder = dict.search_placeholder;
     }
 
-    // Re-render dynamic components in the active language
+    const formNameInput = document.getElementById('formNameInput');
+    if (formNameInput && dict.form_name_ph) {
+      formNameInput.placeholder = dict.form_name_ph;
+    }
+
+    const formCropInput = document.getElementById('formCropInput');
+    if (formCropInput && dict.form_crop_ph) {
+      formCropInput.placeholder = dict.form_crop_ph;
+    }
+
+    const formMsgInput = document.getElementById('formMsgInput');
+    if (formMsgInput && dict.form_msg_ph) {
+      formMsgInput.placeholder = dict.form_msg_ph;
+    }
+
+    const aiSymptomsInput = document.getElementById('aiSymptomsInput');
+    if (aiSymptomsInput && dict.ai_symptoms_ph) {
+      aiSymptomsInput.placeholder = dict.ai_symptoms_ph;
+    }
+
+    // Update Language Toggle Button Label
+    if (langBtnLabel) {
+      langBtnLabel.textContent = lang === 'hi' ? 'Switch to English' : 'हिंदी में देखें';
+    }
+
+    // Re-render product catalog in selected language
     renderStoreProducts();
+
+    // Re-render active AI Diagnosis if open
     if (currentAiDiagnosis) {
       displayAiDiagnosis(currentAiDiagnosis);
     }
+    // Expose globally and update settings buttons
+    window.applyStoreLanguage = applyLanguage;
+    if (window.ThemeManager && typeof window.ThemeManager.updateLangButtons === 'function') {
+      window.ThemeManager.updateLangButtons(lang);
+    }
   }
 
-  // Export applyLanguage globally so ThemeManager / Settings Modal can invoke it
   window.applyStoreLanguage = applyLanguage;
-
-  // Toggle button event
-  langToggleBtn?.addEventListener('click', (e) => {
-    e.preventDefault();
-    const newLang = currentLang === 'hi' ? 'en' : 'hi';
-    applyLanguage(newLang);
-    window.dispatchEvent(new CustomEvent('kissan-language-change', { detail: { lang: newLang } }));
-  });
-
-  // Listen to language change from settings modal
   window.addEventListener('kissan-language-change', (e) => {
-    if (e.detail && e.detail.lang && e.detail.lang !== currentLang) {
+    if (e.detail && e.detail.lang) {
       applyLanguage(e.detail.lang);
     }
+  });
+
+  // Toggle Language Click
+  langToggleBtn?.addEventListener('click', () => {
+    const newLang = currentLang === 'hi' ? 'en' : 'hi';
+    applyLanguage(newLang);
   });
 
   // ==================== DYNAMIC PRODUCT CATALOG ====================
@@ -100,8 +107,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (window.ProductStore) {
       products = window.ProductStore.getProducts();
-    } else if (window.KISSAN_DB) {
-      products = window.KISSAN_DB.products.getAll();
     }
 
     const dict = window.I18n ? window.I18n.TRANSLATIONS[currentLang] : {};
@@ -147,15 +152,15 @@ document.addEventListener('DOMContentLoaded', () => {
       all: currentLang === 'hi' ? 'कृषि उत्पाद' : 'AGRI INPUT'
     };
 
-    const badgeText = categoryBadgeKeys[p.category] || (p.category ? p.category.toUpperCase() : 'PRODUCT');
+    const badgeText = categoryBadgeKeys[p.category] || p.category.toUpperCase();
     const iconContent = p.image 
       ? `<img src="${p.image}" alt="${p.name}" class="product-thumb-img" />` 
       : `<i>${p.icon || '🌱'}</i>`;
 
-    const cropsLabel = dict.card_crops_label || (currentLang === 'hi' ? '🌾 फसल:' : '🌾 Crops:');
-    const targetLabel = dict.card_target_label || (currentLang === 'hi' ? '🎯 काम:' : '🎯 Target:');
-    const packLabel = dict.card_pack_label || (currentLang === 'hi' ? '📦 पैक साइज:' : '📦 Pack Sizes:');
-    const enquireBtnText = dict.btn_enquire_card || (currentLang === 'hi' ? 'दुकान से पूछें (WhatsApp) →' : 'Enquire on WhatsApp →');
+    const cropsLabel = dict.card_crops_label || '🌾 Crops:';
+    const targetLabel = dict.card_target_label || '🎯 Target:';
+    const packLabel = dict.card_pack_label || '📦 Pack Sizes:';
+    const enquireBtnText = dict.btn_enquire_card || 'Enquire on WhatsApp →';
 
     card.innerHTML = `
       <div class="product-top">
@@ -196,16 +201,11 @@ document.addEventListener('DOMContentLoaded', () => {
   searchInput?.addEventListener('input', () => {
     renderStoreProducts();
     const query = searchInput.value.trim();
-    if (query.length >= 2) {
+    if (query.length >= 2 && window.FarmerDB) {
       clearTimeout(searchDebounceTimer);
       searchDebounceTimer = setTimeout(() => {
         const count = productGrid ? productGrid.querySelectorAll('.product-card').length : 0;
-        if (window.KISSAN_API) {
-          window.KISSAN_API.logSearch(query, activeCategory, count);
-        }
-        if (window.KISSAN_DB) {
-          window.KISSAN_DB.searchAnalytics.log(query, activeCategory, count);
-        }
+        window.FarmerDB.logSearch(query, activeCategory, count);
       }, 700);
     }
   });
@@ -271,7 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
     runAiScanBtn.disabled = true;
 
     // Simulate AI Neural Engine processing
-    setTimeout(async () => {
+    setTimeout(() => {
       if (window.CropAIDoctor) {
         currentAiDiagnosis = window.CropAIDoctor.diagnose({
           crop: selectedCrop,
@@ -281,24 +281,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         displayAiDiagnosis(currentAiDiagnosis);
 
-        const scanLogPayload = {
-          crop: currentAiDiagnosis.crop,
-          cropName: currentAiDiagnosis.cropNameEn,
-          disease: currentAiDiagnosis.diseaseNameEn,
-          confidence: currentAiDiagnosis.confidence || '95%',
-          recommendedMedicine: currentAiDiagnosis.recommendedProduct,
-          dosage: currentAiDiagnosis.dosageEn,
-          source: 'Storefront AI Doctor'
-        };
-
-        // Log in Central Backend Database & Local Store
-        if (window.KISSAN_API) {
-          await window.KISSAN_API.logAIScan(scanLogPayload);
-          window.KISSAN_API.logSearch(`[AI Doctor] ${currentAiDiagnosis.diseaseNameEn} (${currentAiDiagnosis.cropNameEn})`, currentAiDiagnosis.crop, 1);
-        }
+        // Log in Master Database AI Doctor scans collection
         if (window.KISSAN_DB) {
-          window.KISSAN_DB.aiDoctor.log(scanLogPayload);
+          window.KISSAN_DB.aiDoctor.log({
+            ...currentAiDiagnosis,
+            source: 'Storefront AI Doctor'
+          });
           window.KISSAN_DB.searchAnalytics.log(`[AI Doctor] ${currentAiDiagnosis.diseaseNameEn} (${currentAiDiagnosis.cropNameEn})`, currentAiDiagnosis.crop, 1);
+        } else if (window.FarmerDB) {
+          window.FarmerDB.logSearch(`[AI Doctor] ${currentAiDiagnosis.diseaseNameEn} (${currentAiDiagnosis.cropNameEn})`, currentAiDiagnosis.crop, 1);
         }
       }
 
@@ -374,32 +365,21 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Contact Enquiry Form Submit
-  document.getElementById('enquiryForm')?.addEventListener('submit', async (e) => {
+  document.getElementById('enquiryForm')?.addEventListener('submit', (e) => {
     e.preventDefault();
     const data = new FormData(e.target);
-    const name = data.get('name') || '';
-    const phone = data.get('phone') || '';
-    const crop = data.get('crop') || '';
-    const message = data.get('message') || '';
+    const name = data.get('name');
+    const crop = data.get('crop');
+    const message = data.get('message');
 
-    const enquiryPayload = {
-      name: String(name).trim(),
-      phone: String(phone).trim(),
-      crop: String(crop).trim(),
-      message: String(message).trim()
-    };
-
-    // Save in Central Database via REST API & Master DB
-    if (window.KISSAN_API) {
-      await window.KISSAN_API.submitEnquiry(enquiryPayload);
-    }
+    // Save in Master DB enquiries collection
     if (window.KISSAN_DB) {
-      window.KISSAN_DB.enquiries.add(enquiryPayload);
+      window.KISSAN_DB.enquiries.add({ name, crop, message });
     }
 
     const text = currentLang === 'hi'
-      ? `नमस्ते मैसर्स किसान पेस्टिसाइड्स एवं बीज स्टोर,%0A%0Aनाम: ${name}%0Aमोबाइल: ${phone}%0Aफसल: ${crop || 'विवरण नहीं'}%0Aपूछताछ: ${message}`
-      : `Hello M/S KISSAN Pesticides and Seed Store,%0A%0AName: ${name}%0APhone: ${phone}%0ACrop: ${crop || 'Not specified'}%0AEnquiry: ${message}`;
+      ? `नमस्ते मैसर्स किसान पेस्टिसाइड्स एवं बीज स्टोर,%0A%0Aनाम: ${name}%0Aफसल: ${crop || 'विवरण नहीं'}%0Aपूछताछ: ${message}`
+      : `Hello M/S KISSAN Pesticides and Seed Store,%0A%0AName: ${name}%0ACrop: ${crop || 'Not specified'}%0AEnquiry: ${message}`;
     window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(text)}`, '_blank');
   });
 

@@ -1,6 +1,5 @@
 // ============================================================================
 // M/S KISSAN - ADMIN PORTAL & MASTER DATABASE MANAGEMENT JAVASCRIPT
-// Full Multi-Device Central Database Synchronization & Control Engine
 // ============================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -12,13 +11,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const authError = document.getElementById('authError');
   const logoutBtn = document.getElementById('logoutBtn');
   const navTabs = document.querySelectorAll('.nav-tab');
-  const refreshLiveServerBtn = document.getElementById('refreshLiveServerBtn');
 
   // Tab Contents
   const tabContentProducts = document.getElementById('tabContentProducts');
   const tabContentFarmers = document.getElementById('tabContentFarmers');
   const tabContentInvoices = document.getElementById('tabContentInvoices');
-  const tabContentEnquiries = document.getElementById('tabContentEnquiries');
   const tabContentAnalytics = document.getElementById('tabContentAnalytics');
   const tabContentDatabase = document.getElementById('tabContentDatabase');
 
@@ -26,8 +23,6 @@ document.addEventListener('DOMContentLoaded', () => {
   let products = window.KISSAN_DB ? window.KISSAN_DB.products.getAll() : [];
   let farmers = window.KISSAN_DB ? window.KISSAN_DB.farmers.getAll() : [];
   let invoices = window.KISSAN_DB ? window.KISSAN_DB.invoices.getAll() : [];
-  let enquiries = [];
-  let aiScans = [];
   let activeFarmerForKhata = null;
 
   // ==================== AUTHENTICATION & SECURITY ====================
@@ -55,12 +50,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (isAuthed) {
       authScreen.classList.add('hidden');
       dashboardScreen.classList.remove('hidden');
-      await loadAllTabsData();
+      loadAllTabsData();
       resetInactivityTimer();
     } else {
       authScreen.classList.remove('hidden');
       dashboardScreen.classList.add('hidden');
-      adminPinInput?.focus();
+      adminPinInput.focus();
     }
   }
 
@@ -91,6 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (isCorrect) {
       authError.textContent = '';
+      // Generate Admin 2FA OTP
       let otpRes = { code: '' };
       if (window.KISSAN_DB && window.KISSAN_DB.otp) {
         otpRes = window.KISSAN_DB.otp.generate('admin_master', 'admin_login');
@@ -139,8 +135,8 @@ document.addEventListener('DOMContentLoaded', () => {
     adminPinInput.focus();
   });
 
-  // Step 2: Verify 2FA OTP & Unlock
-  loginForm?.addEventListener('submit', async (e) => {
+  // Step 2: Form Submit (Verify 2FA OTP & Unlock)
+  loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const enteredOtp = adminOtpInput.value.trim();
 
@@ -170,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  logoutBtn?.addEventListener('click', () => {
+  logoutBtn.addEventListener('click', () => {
     sessionStorage.removeItem('kissan_admin_auth');
     clearTimeout(sessionTimeout);
     checkAuth();
@@ -193,9 +189,6 @@ document.addEventListener('DOMContentLoaded', () => {
       tabContentInvoices.classList.toggle('active', target === 'invoices');
       tabContentInvoices.classList.toggle('hidden', target !== 'invoices');
 
-      tabContentEnquiries.classList.toggle('active', target === 'enquiries');
-      tabContentEnquiries.classList.toggle('hidden', target !== 'enquiries');
-
       tabContentAnalytics.classList.toggle('active', target === 'analytics');
       tabContentAnalytics.classList.toggle('hidden', target !== 'analytics');
 
@@ -205,34 +198,18 @@ document.addEventListener('DOMContentLoaded', () => {
       if (target === 'products') loadProductsTab();
       if (target === 'farmers') loadFarmersTab();
       if (target === 'invoices') loadInvoicesTab();
-      if (target === 'enquiries') loadEnquiriesTab();
       if (target === 'analytics') loadAnalyticsTab();
       if (target === 'database') loadDatabaseTab();
     });
   });
 
-  async function loadAllTabsData() {
-    await Promise.all([
-      loadProductsTab(),
-      loadFarmersTab(),
-      loadInvoicesTab(),
-      loadEnquiriesTab(),
-      loadAnalyticsTab(),
-      loadDatabaseTab()
-    ]);
+  function loadAllTabsData() {
+    loadProductsTab();
+    loadFarmersTab();
+    loadInvoicesTab();
+    loadAnalyticsTab();
+    loadDatabaseTab();
   }
-
-  // Live Refresh Button
-  refreshLiveServerBtn?.addEventListener('click', async () => {
-    refreshLiveServerBtn.disabled = true;
-    refreshLiveServerBtn.textContent = '⏳ लोडिंग...';
-    await loadAllTabsData();
-    showToast('केंद्रीय सर्वर से सभी डेटा लाइव सिंक हो गया है!');
-    setTimeout(() => {
-      refreshLiveServerBtn.disabled = false;
-      refreshLiveServerBtn.textContent = '🔄 ताज़ा करें (Sync)';
-    }, 500);
-  });
 
   // ==================== TAB 1: PRODUCT CATALOG ====================
   const statTotal = document.getElementById('statTotal');
@@ -254,6 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const productForm = document.getElementById('productForm');
   const modalTitle = document.getElementById('modalTitle');
 
+  // Form Inputs
   const editProductId = document.getElementById('editProductId');
   const prodName = document.getElementById('prodName');
   const prodBrand = document.getElementById('prodBrand');
@@ -268,19 +246,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const prodInStock = document.getElementById('prodInStock');
   const prodFeatured = document.getElementById('prodFeatured');
 
-  async function loadProductsTab() {
-    if (window.KISSAN_API) {
-      const serverProducts = await window.KISSAN_API.getProducts();
-      if (Array.isArray(serverProducts) && serverProducts.length > 0) {
-        products = serverProducts;
-        window.KISSAN_DB?.products.saveAllLocal(serverProducts);
-      } else {
-        products = window.KISSAN_DB ? window.KISSAN_DB.products.getAll() : [];
-      }
-    } else {
-      products = window.KISSAN_DB ? window.KISSAN_DB.products.getAll() : [];
-    }
-
+  function loadProductsTab() {
+    products = window.KISSAN_DB ? window.KISSAN_DB.products.getAll() : [];
     updateProductStats();
     renderAdminProducts();
   }
@@ -362,24 +329,18 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
     `;
 
-    card.querySelector('.toggle-stock-btn').addEventListener('click', async () => {
+    card.querySelector('.toggle-stock-btn').addEventListener('click', () => {
       p.inStock = !p.inStock;
-      if (window.KISSAN_API) {
-        await window.KISSAN_API.saveProduct(p);
-      }
-      window.KISSAN_DB?.products.update(p.id, { inStock: p.inStock });
+      window.KISSAN_DB.products.update(p.id, { inStock: p.inStock });
       loadProductsTab();
       showToast(`${p.name} marked as ${p.inStock ? 'In Stock' : 'Out of Stock'}.`);
     });
 
     card.querySelector('.edit-btn').addEventListener('click', () => openEditProductModal(p));
 
-    card.querySelector('.delete-btn').addEventListener('click', async () => {
+    card.querySelector('.delete-btn').addEventListener('click', () => {
       if (confirm(`Are you sure you want to delete "${p.name}"?`)) {
-        if (window.KISSAN_API) {
-          await window.KISSAN_API.deleteProduct(p.id);
-        }
-        window.KISSAN_DB?.products.delete(p.id);
+        window.KISSAN_DB.products.delete(p.id);
         loadProductsTab();
         showToast(`Deleted ${p.name}`);
       }
@@ -415,25 +376,30 @@ document.addEventListener('DOMContentLoaded', () => {
     productModal.classList.remove('hidden');
   }
 
-  openAddModalBtn?.addEventListener('click', openAddProductModal);
-  closeModalBtn?.addEventListener('click', () => productModal.classList.add('hidden'));
-  cancelModalBtn?.addEventListener('click', () => productModal.classList.add('hidden'));
+  function closeProductModal() {
+    productModal.classList.add('hidden');
+  }
+
+  openAddModalBtn.addEventListener('click', openAddProductModal);
+  closeModalBtn.addEventListener('click', closeProductModal);
+  cancelModalBtn.addEventListener('click', closeProductModal);
 
   prodImageUpload?.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (ev) => { prodImageBase64.value = ev.target.result; };
+      reader.onload = (ev) => {
+        prodImageBase64.value = ev.target.result;
+      };
       reader.readAsDataURL(file);
     }
   });
 
-  productForm?.addEventListener('submit', async (e) => {
+  productForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const id = editProductId.value;
 
     const data = {
-      id: id || ('prod_' + Date.now()),
       name: prodName.value.trim(),
       brand: prodBrand.value.trim(),
       category: prodCategory.value,
@@ -447,26 +413,22 @@ document.addEventListener('DOMContentLoaded', () => {
       featured: prodFeatured.checked
     };
 
-    if (window.KISSAN_API) {
-      await window.KISSAN_API.saveProduct(data);
-    }
-
     if (id) {
-      window.KISSAN_DB?.products.update(id, data);
+      window.KISSAN_DB.products.update(id, data);
       showToast(`Updated "${data.name}"`);
     } else {
-      window.KISSAN_DB?.products.add(data);
+      window.KISSAN_DB.products.add(data);
       showToast(`Added "${data.name}" to inventory!`);
     }
 
-    productModal.classList.add('hidden');
+    closeProductModal();
     loadProductsTab();
   });
 
-  adminSearchInput?.addEventListener('input', renderAdminProducts);
-  adminCategoryFilter?.addEventListener('change', renderAdminProducts);
-  adminStockFilter?.addEventListener('change', renderAdminProducts);
-  clearFiltersBtn?.addEventListener('click', () => {
+  adminSearchInput.addEventListener('input', renderAdminProducts);
+  adminCategoryFilter.addEventListener('change', renderAdminProducts);
+  adminStockFilter.addEventListener('change', renderAdminProducts);
+  clearFiltersBtn.addEventListener('click', () => {
     adminSearchInput.value = '';
     adminCategoryFilter.value = 'all';
     adminStockFilter.value = 'all';
@@ -495,18 +457,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const farmerMobileInput = document.getElementById('farmerMobileInput');
   const farmerVillageInput = document.getElementById('farmerVillageInput');
   const farmerLandInput = document.getElementById('farmerLandInput');
-  const farmerPasswordInput = document.getElementById('farmerPasswordInput');
   const farmerCropsInput = document.getElementById('farmerCropsInput');
   const farmerNotesInput = document.getElementById('farmerNotesInput');
-
-  // Reset Password Modal
-  const resetFarmerPassModal = document.getElementById('resetFarmerPassModal');
-  const closeResetFarmerPassModalBtn = document.getElementById('closeResetFarmerPassModalBtn');
-  const cancelResetFarmerPassBtn = document.getElementById('cancelResetFarmerPassBtn');
-  const resetFarmerPassForm = document.getElementById('resetFarmerPassForm');
-  const resetFarmerTargetId = document.getElementById('resetFarmerTargetId');
-  const resetFarmerTargetMeta = document.getElementById('resetFarmerTargetMeta');
-  const adminNewPassInput = document.getElementById('adminNewPassInput');
 
   // Khata Tx Modal
   const khataModal = document.getElementById('khataModal');
@@ -534,19 +486,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const noStmtMsg = document.getElementById('noStmtMsg');
   const sendWaKhataBtn = document.getElementById('sendWaKhataBtn');
 
-  async function loadFarmersTab() {
-    if (window.KISSAN_API) {
-      const serverFarmers = await window.KISSAN_API.getFarmers();
-      if (Array.isArray(serverFarmers) && serverFarmers.length > 0) {
-        farmers = serverFarmers;
-        window.KISSAN_DB?.farmers.saveAllLocal(serverFarmers);
-      } else {
-        farmers = window.KISSAN_DB ? window.KISSAN_DB.farmers.getAll() : [];
-      }
-    } else {
-      farmers = window.KISSAN_DB ? window.KISSAN_DB.farmers.getAll() : [];
-    }
-
+  function loadFarmersTab() {
+    farmers = window.KISSAN_DB ? window.KISSAN_DB.farmers.getAll() : [];
     updateFarmerStats();
     renderFarmersGrid();
   }
@@ -574,8 +515,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const filtered = farmers.filter(f => {
       return !query ||
         f.name.toLowerCase().includes(query) ||
-        (f.id && f.id.toLowerCase().includes(query)) ||
-        (f.mobile && f.mobile.includes(query)) ||
+        f.id.toLowerCase().includes(query) ||
+        f.mobile.includes(query) ||
         (f.village && f.village.toLowerCase().includes(query)) ||
         (f.crops && f.crops.toLowerCase().includes(query));
     });
@@ -613,13 +554,11 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="farmer-info-item">📞 <b>Mobile:</b> ${f.mobile}</div>
       <div class="farmer-info-item">📍 <b>Village:</b> ${f.village || 'Behra Sadat'}</div>
       <div class="farmer-info-item">🌾 <b>Crops:</b> ${f.crops || 'Sugarcane, Wheat'}</div>
-      <div class="farmer-info-item">🔒 <b>Password:</b> <span style="font-family:monospace; background:#f1f5f9; padding:2px 6px; border-radius:4px;">${f.password || f.pin || '1234'}</span></div>
       ${f.landSize ? `<div class="farmer-info-item">🚜 <b>Land Area:</b> ${f.landSize}</div>` : ''}
 
       <div class="card-actions" style="margin-top:16px;">
-        <button class="btn btn-secondary btn-view-khata" data-id="${f.id}">📜 Khata</button>
-        <button class="btn btn-outline btn-add-khata" data-id="${f.id}">➕ Bill</button>
-        <button class="btn btn-outline btn-reset-pass" data-id="${f.id}" title="Reset Farmer Password">🔑 Pass</button>
+        <button class="btn btn-secondary btn-view-khata" data-id="${f.id}">📜 View Khata</button>
+        <button class="btn btn-outline btn-add-khata" data-id="${f.id}">➕ Add Purchase</button>
         <button class="btn btn-outline btn-edit-farmer" data-id="${f.id}">✏️</button>
         <button class="btn btn-danger btn-delete-farmer" data-id="${f.id}">🗑️</button>
       </div>
@@ -627,14 +566,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     card.querySelector('.btn-view-khata').addEventListener('click', () => openStatementModal(f));
     card.querySelector('.btn-add-khata').addEventListener('click', () => openKhataModal(f));
-    card.querySelector('.btn-reset-pass').addEventListener('click', () => openResetPassModal(f));
     card.querySelector('.btn-edit-farmer').addEventListener('click', () => openEditFarmerModal(f));
-    card.querySelector('.btn-delete-farmer').addEventListener('click', async () => {
-      if (confirm(`Are you sure you want to delete ${f.name} (${f.id}) and all records?`)) {
-        if (window.KISSAN_API) {
-          await window.KISSAN_API.deleteFarmer(f.id);
-        }
-        window.KISSAN_DB?.farmers.delete(f.id);
+    card.querySelector('.btn-delete-farmer').addEventListener('click', () => {
+      if (confirm(`Are you sure you want to delete ${f.name} (${f.id}) and their khata history?`)) {
+        window.KISSAN_DB.farmers.delete(f.id);
         loadFarmersTab();
         showToast(`Farmer ${f.name} deleted.`);
       }
@@ -643,36 +578,6 @@ document.addEventListener('DOMContentLoaded', () => {
     return card;
   }
 
-  function openResetPassModal(f) {
-    resetFarmerTargetId.value = f.id;
-    resetFarmerTargetMeta.textContent = `Farmer: ${f.name} (${f.id}) • Mob: ${f.mobile}`;
-    adminNewPassInput.value = '';
-    resetFarmerPassModal.classList.remove('hidden');
-  }
-
-  closeResetFarmerPassModalBtn?.addEventListener('click', () => resetFarmerPassModal.classList.add('hidden'));
-  cancelResetFarmerPassBtn?.addEventListener('click', () => resetFarmerPassModal.classList.add('hidden'));
-
-  resetFarmerPassForm?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const id = resetFarmerTargetId.value;
-    const newPass = adminNewPassInput.value.trim();
-
-    if (newPass.length < 4) {
-      alert('Password must be at least 4 characters.');
-      return;
-    }
-
-    if (window.KISSAN_API) {
-      await window.KISSAN_API.resetFarmerPassword(id, newPass);
-    }
-    window.KISSAN_DB?.farmers.update(id, { password: newPass, pin: newPass });
-
-    resetFarmerPassModal.classList.add('hidden');
-    loadFarmersTab();
-    showToast(`Password updated for farmer ${id}!`);
-  });
-
   function openEditFarmerModal(f) {
     farmerModalTitle.textContent = 'Edit Farmer Profile';
     editFarmerId.value = f.id;
@@ -680,7 +585,6 @@ document.addEventListener('DOMContentLoaded', () => {
     farmerMobileInput.value = f.mobile || '';
     farmerVillageInput.value = f.village || '';
     farmerLandInput.value = f.landSize || '';
-    farmerPasswordInput.value = f.password || f.pin || '';
     farmerCropsInput.value = f.crops || '';
     farmerNotesInput.value = f.notes || '';
     farmerModal.classList.remove('hidden');
@@ -692,52 +596,39 @@ document.addEventListener('DOMContentLoaded', () => {
     editFarmerId.value = '';
     farmerVillageInput.value = 'Village Behra Sadat';
     farmerCropsInput.value = 'Sugarcane, Wheat';
-    farmerPasswordInput.value = '1234';
     farmerModal.classList.remove('hidden');
   }
 
-  openAddFarmerModalBtn?.addEventListener('click', openAddFarmerModal);
-  closeFarmerModalBtn?.addEventListener('click', () => farmerModal.classList.add('hidden'));
-  cancelFarmerModalBtn?.addEventListener('click', () => farmerModal.classList.add('hidden'));
+  openAddFarmerModalBtn.addEventListener('click', openAddFarmerModal);
+  closeFarmerModalBtn.addEventListener('click', () => farmerModal.classList.add('hidden'));
+  cancelFarmerModalBtn.addEventListener('click', () => farmerModal.classList.add('hidden'));
 
-  farmerForm?.addEventListener('submit', async (e) => {
+  farmerForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const id = editFarmerId.value;
 
     const data = {
-      id: id || undefined,
       name: farmerNameInput.value.trim(),
       mobile: farmerMobileInput.value.trim(),
       village: farmerVillageInput.value.trim(),
       landSize: farmerLandInput.value.trim(),
-      password: farmerPasswordInput.value.trim() || '1234',
-      pin: farmerPasswordInput.value.trim() || '1234',
       crops: farmerCropsInput.value.trim(),
       notes: farmerNotesInput.value.trim()
     };
 
     if (id) {
-      if (window.KISSAN_API) {
-        await window.KISSAN_API.updateFarmer(id, data);
-      }
-      window.KISSAN_DB?.farmers.update(id, data);
+      window.KISSAN_DB.farmers.update(id, data);
       showToast(`Updated profile for ${data.name}`);
     } else {
-      let created = null;
-      if (window.KISSAN_API) {
-        created = await window.KISSAN_API.registerFarmer(data);
-      }
-      if (!created || !created.id) {
-        created = window.KISSAN_DB?.farmers.add(data);
-      }
-      showToast(`Registered new farmer ${created.name} (${created.id})!`);
+      const added = window.KISSAN_DB.farmers.add(data);
+      showToast(`Registered new farmer ${added.name} (${added.id})!`);
     }
 
     farmerModal.classList.add('hidden');
     loadFarmersTab();
   });
 
-  farmerSearchInput?.addEventListener('input', renderFarmersGrid);
+  farmerSearchInput.addEventListener('input', renderFarmersGrid);
 
   // Khata Add Purchase Modal
   function openKhataModal(f) {
@@ -749,10 +640,10 @@ document.addEventListener('DOMContentLoaded', () => {
     khataModal.classList.remove('hidden');
   }
 
-  closeKhataModalBtn?.addEventListener('click', () => khataModal.classList.add('hidden'));
-  cancelKhataModalBtn?.addEventListener('click', () => khataModal.classList.add('hidden'));
+  closeKhataModalBtn.addEventListener('click', () => khataModal.classList.add('hidden'));
+  cancelKhataModalBtn.addEventListener('click', () => khataModal.classList.add('hidden'));
 
-  khataEntryForm?.addEventListener('submit', async (e) => {
+  khataEntryForm.addEventListener('submit', (e) => {
     e.preventDefault();
     if (!activeFarmerForKhata) return;
 
@@ -765,11 +656,7 @@ document.addEventListener('DOMContentLoaded', () => {
       notes: txNotes.value.trim()
     };
 
-    if (window.KISSAN_API) {
-      await window.KISSAN_API.addKhataTransaction(activeFarmerForKhata.id, entry);
-    }
-    window.KISSAN_DB?.farmers.addKhataEntry(activeFarmerForKhata.id, entry);
-
+    window.KISSAN_DB.farmers.addKhataEntry(activeFarmerForKhata.id, entry);
     showToast(`Purchase added to ${activeFarmerForKhata.name}'s Khata!`);
     khataModal.classList.add('hidden');
     loadFarmersTab();
@@ -779,7 +666,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function openStatementModal(f) {
     activeFarmerForKhata = f;
     statementFarmerName.textContent = `${f.name} (${f.id})`;
-    statementFarmerMeta.textContent = `Mobile: ${f.mobile} • Village: ${f.village} • Password: ${f.password || f.pin || '---'}`;
+    statementFarmerMeta.textContent = `Mobile: ${f.mobile} • Village: ${f.village} • Land: ${f.landSize || 'N/A'}`;
 
     const khata = f.khata || [];
     let totalPurchases = 0;
@@ -822,11 +709,12 @@ document.addEventListener('DOMContentLoaded', () => {
     statementModal.classList.remove('hidden');
   }
 
-  closeStatementModalBtn?.addEventListener('click', () => statementModal.classList.add('hidden'));
-  closeStatementBtn?.addEventListener('click', () => statementModal.classList.add('hidden'));
+  closeStatementModalBtn.addEventListener('click', () => statementModal.classList.add('hidden'));
+  closeStatementBtn.addEventListener('click', () => statementModal.classList.add('hidden'));
 
-  exportFarmersJsonBtn?.addEventListener('click', () => {
-    window.KISSAN_DB?.backup.exportTableToCSV('farmers');
+  // Export Farmers DB
+  exportFarmersJsonBtn.addEventListener('click', () => {
+    window.KISSAN_DB.backup.exportTableToCSV('farmers');
     showToast('Farmers directory CSV exported for Excel!');
   });
 
@@ -877,19 +765,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const rcptDue = document.getElementById('rcptDue');
   const rcptMode = document.getElementById('rcptMode');
 
-  async function loadInvoicesTab() {
-    if (window.KISSAN_API) {
-      const serverInvoices = await window.KISSAN_API.getInvoices();
-      if (Array.isArray(serverInvoices) && serverInvoices.length > 0) {
-        invoices = serverInvoices;
-        window.KISSAN_DB?.invoices.saveAllLocal(serverInvoices);
-      } else {
-        invoices = window.KISSAN_DB ? window.KISSAN_DB.invoices.getAll() : [];
-      }
-    } else {
-      invoices = window.KISSAN_DB ? window.KISSAN_DB.invoices.getAll() : [];
-    }
-
+  function loadInvoicesTab() {
+    invoices = window.KISSAN_DB ? window.KISSAN_DB.invoices.getAll() : [];
     updateInvoiceStats();
     renderInvoicesTable();
   }
@@ -965,12 +842,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         tr.querySelector('.btn-view-rcpt').addEventListener('click', () => openInvoiceReceipt(inv));
         tr.querySelector('.btn-wa-rcpt').addEventListener('click', () => sendInvoiceWhatsApp(inv));
-        tr.querySelector('.btn-del-inv').addEventListener('click', async () => {
+        tr.querySelector('.btn-del-inv').addEventListener('click', () => {
           if (confirm(`Delete Invoice #${inv.id}?`)) {
-            if (window.KISSAN_API) {
-              await window.KISSAN_API.deleteInvoice(inv.id);
-            }
-            window.KISSAN_DB?.invoices.delete(inv.id);
+            window.KISSAN_DB.invoices.delete(inv.id);
             loadInvoicesTab();
             showToast(`Invoice #${inv.id} deleted.`);
           }
@@ -984,7 +858,7 @@ document.addEventListener('DOMContentLoaded', () => {
   invoiceSearchInput?.addEventListener('input', renderInvoicesTable);
 
   exportInvoicesCsvBtn?.addEventListener('click', () => {
-    window.KISSAN_DB?.backup.exportTableToCSV('invoices');
+    window.KISSAN_DB.backup.exportTableToCSV('invoices');
     showToast('Invoices exported to CSV for Excel accounting!');
   });
 
@@ -993,7 +867,7 @@ document.addEventListener('DOMContentLoaded', () => {
     invoiceForm.reset();
     invoiceItemsBody.innerHTML = '';
     populateFarmerSelectDropdown();
-    addInvoiceItemRow();
+    addInvoiceItemRow(); // Add first item row by default
     recalcInvoiceTotals();
     createInvoiceModal.classList.remove('hidden');
   });
@@ -1029,7 +903,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function addInvoiceItemRow() {
     const tr = document.createElement('tr');
-    const catalogProds = products.length > 0 ? products : (window.KISSAN_DB ? window.KISSAN_DB.products.getAll() : []);
+    const catalogProds = window.KISSAN_DB ? window.KISSAN_DB.products.getAll() : [];
+
+    let optionsHtml = '<option value="">-- Select Product or Type --</option>';
+    catalogProds.forEach(p => {
+      optionsHtml += `<option value="${p.name}" data-price="${p.price || 0}">${p.name} (${p.brand || 'Agri'})</option>`;
+    });
 
     tr.innerHTML = `
       <td>
@@ -1104,7 +983,7 @@ document.addEventListener('DOMContentLoaded', () => {
   invDiscount?.addEventListener('input', recalcInvoiceTotals);
   invPaidAmount?.addEventListener('input', recalcInvoiceTotals);
 
-  invoiceForm?.addEventListener('submit', async (e) => {
+  invoiceForm?.addEventListener('submit', (e) => {
     e.preventDefault();
 
     const items = [];
@@ -1142,18 +1021,13 @@ document.addEventListener('DOMContentLoaded', () => {
       notes: invNotes.value.trim()
     };
 
-    let created = null;
-    if (window.KISSAN_API) {
-      created = await window.KISSAN_API.createInvoice(invoiceData);
-    }
-    if (!created || !created.id) {
-      created = window.KISSAN_DB?.invoices.create(invoiceData);
-    }
-
+    const created = window.KISSAN_DB.invoices.create(invoiceData);
     createInvoiceModal.classList.add('hidden');
     loadInvoicesTab();
     loadFarmersTab();
     showToast(`Invoice #${created.id} generated successfully!`);
+
+    // Open receipt modal automatically
     openInvoiceReceipt(created);
   });
 
@@ -1194,151 +1068,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
   closeInvoiceViewModalBtn?.addEventListener('click', () => invoiceViewModal.classList.add('hidden'));
   closeRcptBtn?.addEventListener('click', () => invoiceViewModal.classList.add('hidden'));
-  printRcptBtn?.addEventListener('click', () => { window.print(); });
-
-  // ==================== TAB 4: ENQUIRIES & AI DOCTOR SCANS ====================
-  const enquiryCountLabel = document.getElementById('enquiryCountLabel');
-  const enquiriesTableBody = document.getElementById('enquiriesTableBody');
-  const noEnquiryMsg = document.getElementById('noEnquiryMsg');
-  const aiScanCountLabel = document.getElementById('aiScanCountLabel');
-  const aiScansTableBody = document.getElementById('aiScansTableBody');
-  const noAiScanMsg = document.getElementById('noAiScanMsg');
-  const refreshEnquiriesBtn = document.getElementById('refreshEnquiriesBtn');
-
-  async function loadEnquiriesTab() {
-    if (window.KISSAN_API) {
-      const serverEnquiries = await window.KISSAN_API.getEnquiries();
-      enquiries = Array.isArray(serverEnquiries) ? serverEnquiries : (window.KISSAN_DB?.enquiries.getAll() || []);
-      const serverScans = await window.KISSAN_API.getAIScans();
-      aiScans = Array.isArray(serverScans) ? serverScans : (window.KISSAN_DB?.aiDoctor.getAll() || []);
-    } else {
-      enquiries = window.KISSAN_DB?.enquiries.getAll() || [];
-      aiScans = window.KISSAN_DB?.aiDoctor.getAll() || [];
-    }
-
-    renderEnquiriesTable();
-    renderAiScansTable();
-  }
-
-  refreshEnquiriesBtn?.addEventListener('click', async () => {
-    await loadEnquiriesTab();
-    showToast('Enquiries and AI scans refreshed!');
+  printRcptBtn?.addEventListener('click', () => {
+    window.print();
   });
 
-  function renderEnquiriesTable() {
-    if (!enquiriesTableBody) return;
-    enquiryCountLabel.textContent = enquiries.length;
-    enquiriesTableBody.innerHTML = '';
-
-    if (enquiries.length === 0) {
-      noEnquiryMsg?.classList.remove('hidden');
-    } else {
-      noEnquiryMsg?.classList.add('hidden');
-      enquiries.forEach(enq => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td><small>${enq.date || '---'}</small></td>
-          <td><b>${enq.name || 'Anonymous'}</b></td>
-          <td>${enq.phone || '---'}</td>
-          <td><span class="category-pill">${enq.crop || 'Crop'}</span></td>
-          <td style="max-width:240px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${enq.message}">
-            ${enq.message || '---'}
-          </td>
-          <td>
-            <span class="stock-badge ${enq.status === 'Responded' ? 'in-stock' : 'out-of-stock'}">
-              ${enq.status || 'New'}
-            </span>
-          </td>
-          <td>
-            <div style="display:flex; gap:6px;">
-              <button class="btn btn-whatsapp btn-reply-enq" title="WhatsApp Reply">💬 Reply</button>
-              <button class="btn btn-outline btn-mark-enq" title="Mark Responded">✓ Done</button>
-              <button class="btn btn-danger btn-del-enq" title="Delete">🗑️</button>
-            </div>
-          </td>
-        `;
-
-        tr.querySelector('.btn-reply-enq').addEventListener('click', () => {
-          const ph = (enq.phone || '').replace(/\D/g, '');
-          const replyText = `नमस्ते ${enq.name} जी, मैसर्स किसान पेस्टिसाइड्स (मोरना) से श्री महीपाल सिंह बात कर रहा हूँ। आपने हमारी वेबसाइट पर फसल (${enq.crop}) के संबंध में प्रश्न पूछा था: "${enq.message}"। हम आपकी सहायता हेतु उपलब्ध हैं।`;
-          window.open(`https://wa.me/91${ph || waNumber}?text=${encodeURIComponent(replyText)}`, '_blank');
-        });
-
-        tr.querySelector('.btn-mark-enq').addEventListener('click', async () => {
-          if (window.KISSAN_API) {
-            await window.KISSAN_API.updateEnquiryStatus(enq.id, 'Responded');
-          }
-          enq.status = 'Responded';
-          renderEnquiriesTable();
-          showToast('Marked enquiry as Responded.');
-        });
-
-        tr.querySelector('.btn-del-enq').addEventListener('click', async () => {
-          if (confirm('Delete this enquiry record?')) {
-            if (window.KISSAN_API) {
-              await window.KISSAN_API.deleteEnquiry(enq.id);
-            }
-            window.KISSAN_DB?.enquiries.delete(enq.id);
-            loadEnquiriesTab();
-            showToast('Enquiry deleted.');
-          }
-        });
-
-        enquiriesTableBody.appendChild(tr);
-      });
-    }
-  }
-
-  function renderAiScansTable() {
-    if (!aiScansTableBody) return;
-    aiScanCountLabel.textContent = aiScans.length;
-    aiScansTableBody.innerHTML = '';
-
-    if (aiScans.length === 0) {
-      noAiScanMsg?.classList.remove('hidden');
-    } else {
-      noAiScanMsg?.classList.add('hidden');
-      aiScans.forEach(scan => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td><small>${scan.date || '---'}</small></td>
-          <td><b>${scan.cropName || scan.crop || 'Crop'}</b></td>
-          <td style="color:var(--danger); font-weight:700;">${scan.disease || 'Detected Issue'}</td>
-          <td><span class="category-pill">${scan.confidence || '95%'}</span></td>
-          <td><b>${scan.recommendedMedicine || scan.recommendedProduct || 'Agri Input'}</b></td>
-          <td><small>${scan.dosage || 'As per label'}</small></td>
-        `;
-        aiScansTableBody.appendChild(tr);
-      });
-    }
-  }
-
-  // ==================== TAB 5: SEARCH ANALYTICS ====================
+  // ==================== TAB 4: SEARCH ANALYTICS ====================
   const topKeywordsList = document.getElementById('topKeywordsList');
   const searchLogCount = document.getElementById('searchLogCount');
   const searchLogTableBody = document.getElementById('searchLogTableBody');
   const clearSearchLogsBtn = document.getElementById('clearSearchLogsBtn');
 
-  async function loadAnalyticsTab() {
-    let logs = [];
-    if (window.KISSAN_API) {
-      logs = await window.KISSAN_API.getSearches();
-    }
-    if (!Array.isArray(logs) || logs.length === 0) {
-      logs = window.KISSAN_DB ? window.KISSAN_DB.searchAnalytics.getAll() : [];
-    }
+  function loadAnalyticsTab() {
+    const logs = window.KISSAN_DB ? window.KISSAN_DB.searchAnalytics.getAll() : [];
+    const trends = window.KISSAN_DB ? window.KISSAN_DB.searchAnalytics.getTopTrends() : [];
 
     searchLogCount.textContent = `${logs.length} search logs`;
-
-    const counts = {};
-    logs.forEach(l => {
-      const q = (l.query || '').toLowerCase();
-      counts[q] = (counts[q] || 0) + 1;
-    });
-    const trends = Object.keys(counts)
-      .map(q => ({ query: q, count: counts[q] }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 10);
 
     // Render Top Trends
     topKeywordsList.innerHTML = '';
@@ -1361,29 +1105,26 @@ document.addEventListener('DOMContentLoaded', () => {
     searchLogTableBody.innerHTML = '';
     logs.slice(0, 50).forEach(log => {
       const tr = document.createElement('tr');
-      const timeFormatted = log.timestamp ? new Date(log.timestamp).toLocaleString('en-IN') : '---';
+      const timeFormatted = new Date(log.timestamp).toLocaleString('en-IN');
       tr.innerHTML = `
         <td><small>${timeFormatted}</small></td>
         <td><b>${log.query}</b></td>
-        <td><span class="category-pill">${log.category || 'all'}</span></td>
-        <td>${log.count || 1}</td>
+        <td><span class="category-pill">${log.category}</span></td>
+        <td>${log.count}</td>
       `;
       searchLogTableBody.appendChild(tr);
     });
   }
 
-  clearSearchLogsBtn?.addEventListener('click', async () => {
+  clearSearchLogsBtn?.addEventListener('click', () => {
     if (confirm('Clear all search demand logs?')) {
-      if (window.KISSAN_API) {
-        await window.KISSAN_API.clearSearches();
-      }
-      window.KISSAN_DB?.searchAnalytics.clear();
+      window.KISSAN_DB.searchAnalytics.clear();
       loadAnalyticsTab();
       showToast('Search logs cleared.');
     }
   });
 
-  // ==================== TAB 6: MASTER DATABASE & BACKUP CENTER ====================
+  // ==================== TAB 5: MASTER DATABASE & BACKUP CENTER ====================
   const dbCountProducts = document.getElementById('dbCountProducts');
   const dbCountFarmers = document.getElementById('dbCountFarmers');
   const dbCountInvoices = document.getElementById('dbCountInvoices');
@@ -1401,12 +1142,12 @@ document.addEventListener('DOMContentLoaded', () => {
   function loadDatabaseTab() {
     if (!window.KISSAN_DB) return;
 
-    dbCountProducts.textContent = products.length;
-    dbCountFarmers.textContent = farmers.length;
-    dbCountInvoices.textContent = invoices.length;
-    dbCountAiScans.textContent = aiScans.length;
+    dbCountProducts.textContent = window.KISSAN_DB.products.getAll().length;
+    dbCountFarmers.textContent = window.KISSAN_DB.farmers.getAll().length;
+    dbCountInvoices.textContent = window.KISSAN_DB.invoices.getAll().length;
+    dbCountAiScans.textContent = window.KISSAN_DB.aiDoctor.getAll().length;
     dbCountSearches.textContent = window.KISSAN_DB.searchAnalytics.getAll().length;
-    dbCountEnquiries.textContent = enquiries.length;
+    dbCountEnquiries.textContent = window.KISSAN_DB.enquiries.getAll().length;
 
     renderRawTableExplorer();
   }
@@ -1416,11 +1157,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const selected = dbTableSelect.value;
     let data = [];
 
-    if (selected === 'products') data = products;
-    else if (selected === 'farmers') data = farmers;
-    else if (selected === 'invoices') data = invoices;
-    else if (selected === 'aiScans') data = aiScans;
-    else if (selected === 'enquiries') data = enquiries;
+    if (selected === 'products') data = window.KISSAN_DB.products.getAll();
+    else if (selected === 'farmers') data = window.KISSAN_DB.farmers.getAll();
+    else if (selected === 'invoices') data = window.KISSAN_DB.invoices.getAll();
+    else if (selected === 'aiScans') data = window.KISSAN_DB.aiDoctor.getAll();
+    else if (selected === 'enquiries') data = window.KISSAN_DB.enquiries.getAll();
     else if (selected === 'settings') data = window.KISSAN_DB.settings.get();
 
     rawJsonViewer.textContent = JSON.stringify(data, null, 2);
@@ -1428,16 +1169,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   dbTableSelect?.addEventListener('change', renderRawTableExplorer);
 
+  // CSV Quick Download buttons
   document.querySelectorAll('.db-quick-csv').forEach(btn => {
     btn.addEventListener('click', () => {
       const table = btn.dataset.csv;
-      window.KISSAN_DB?.backup.exportTableToCSV(table);
+      window.KISSAN_DB.backup.exportTableToCSV(table);
       showToast(`Exported ${table} table to CSV!`);
     });
   });
 
+  // Master JSON Backup
   function triggerMasterBackup() {
-    window.KISSAN_DB?.backup.exportMasterJSON();
+    window.KISSAN_DB.backup.exportMasterJSON();
     showToast('Master Database Backup JSON downloaded!');
     loadDatabaseTab();
   }
@@ -1445,6 +1188,7 @@ document.addEventListener('DOMContentLoaded', () => {
   masterBackupJsonBtn?.addEventListener('click', triggerMasterBackup);
   btnExportFullDb?.addEventListener('click', triggerMasterBackup);
 
+  // Restore Master JSON
   importMasterDbInput?.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -1453,12 +1197,12 @@ document.addEventListener('DOMContentLoaded', () => {
     reader.onload = (ev) => {
       try {
         const jsonData = JSON.parse(ev.target.result);
-        const res = window.KISSAN_DB?.backup.importMasterJSON(jsonData);
-        if (res && res.success) {
+        const res = window.KISSAN_DB.backup.importMasterJSON(jsonData);
+        if (res.success) {
           showToast(res.message);
           loadAllTabsData();
         } else {
-          alert('Restore Failed: ' + (res ? res.message : 'Unknown error'));
+          alert('Restore Failed: ' + res.message);
         }
       } catch (err) {
         alert('Invalid JSON file format.');
@@ -1469,12 +1213,12 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   btnExportInvoicesCsv?.addEventListener('click', () => {
-    window.KISSAN_DB?.backup.exportTableToCSV('invoices');
+    window.KISSAN_DB.backup.exportTableToCSV('invoices');
     showToast('Invoices exported to CSV!');
   });
 
   btnExportFarmersCsv?.addEventListener('click', () => {
-    window.KISSAN_DB?.backup.exportTableToCSV('farmers');
+    window.KISSAN_DB.backup.exportTableToCSV('farmers');
     showToast('Farmers exported to CSV!');
   });
 

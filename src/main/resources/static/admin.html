@@ -79,31 +79,27 @@
           <span class="brand-mark">K</span>
           <div>
             <strong>M/S KISSAN ADMIN</strong>
-            <small>Village Behra Sadat, Morna • <span id="serverStatusBadge" style="color:#16a34a; font-weight:700;">🟢 Central DB Live</span></small>
+            <small>Village Behra Sadat, Morna</small>
           </div>
         </div>
 
         <!-- Section Navigation Tabs -->
         <div class="admin-nav-tabs">
           <button class="nav-tab active" data-tab="products">📦 Products</button>
-          <button class="nav-tab" data-tab="farmers">🌾 Farmers & Accounts</button>
+          <button class="nav-tab" data-tab="farmers">🌾 Farmer Khata</button>
           <button class="nav-tab" data-tab="invoices">🧾 POS Invoices</button>
-          <button class="nav-tab" data-tab="enquiries">💬 Enquiries & Scans</button>
           <button class="nav-tab" data-tab="analytics">🔍 Search Demand</button>
           <button class="nav-tab" data-tab="database">🗄️ Master Database</button>
         </div>
 
         <div class="header-actions">
-          <button type="button" id="refreshLiveServerBtn" class="btn btn-primary" title="Pull fresh data from Central SQL Database">
-            🔄 ताज़ा करें (Sync)
-          </button>
           <button type="button" id="settingsBtn" class="btn-settings-pill" aria-label="Settings" title="Store Settings & Theme">
             <span class="settings-icon">⚙️</span>
             <span class="settings-label">Settings</span>
           </button>
           <a href="farmer-portal.html" class="btn btn-outline" target="_blank" title="Open Farmer Passbook Portal">👨‍🌾 Farmer Portal</a>
           <a href="index.html" class="btn btn-outline" target="_blank" title="Preview live website">🌐 Live Store</a>
-          <button id="changePinBtn" class="btn btn-outline">🔑 PIN</button>
+          <button id="changePinBtn" class="btn btn-outline">🔑 Change PIN</button>
           <button id="logoutBtn" class="btn btn-danger">🔒 Logout</button>
         </div>
       </div>
@@ -130,7 +126,7 @@
             <div class="setting-header-row">
               <span class="setting-icon">🌓</span>
               <div style="flex:1;">
-                <strong>Display Theme (थीम)</strong>
+                <strong>Display Theme</strong>
                 <small>Select Bright (Light) or Dark Mode</small>
               </div>
             </div>
@@ -144,29 +140,31 @@
             </div>
           </div>
 
-          <!-- 2. Shortcuts -->
+          <!-- 2. Shortcuts / Authorized Brands & Portals -->
           <div class="setting-links-list">
             <a href="distributors.html" class="setting-nav-card" target="_blank">
               <span class="setting-nav-icon">🤝</span>
               <div class="setting-nav-info">
                 <strong>Authorized Brands & Partners</strong>
-                <small>Syngenta, DuPont, Coromandel & FMC</small>
+                <small>Syngenta, DuPont, Coromandel, FMC & more</small>
               </div>
               <span class="setting-nav-arrow">→</span>
             </a>
+
             <a href="farmer-portal.html" class="setting-nav-card" target="_blank">
-              <span class="setting-nav-icon">👨‍🌾</span>
+              <span class="setting-nav-icon">🌾</span>
               <div class="setting-nav-info">
-                <strong>Farmer Digital Portal</strong>
-                <small>Passbook, khata ledger & instant login</small>
+                <strong>Farmer Khata & Passbook Portal</strong>
+                <small>Customer passbooks & ledger records</small>
               </div>
               <span class="setting-nav-arrow">→</span>
             </a>
+
             <a href="index.html" class="setting-nav-card" target="_blank">
               <span class="setting-nav-icon">🏪</span>
               <div class="setting-nav-info">
-                <strong>Storefront Website</strong>
-                <small>AI Crop Doctor, catalog & contact</small>
+                <strong>Live Main Storefront</strong>
+                <small>Public website and AI crop doctor</small>
               </div>
               <span class="setting-nav-arrow">→</span>
             </a>
@@ -175,23 +173,24 @@
       </div>
     </div>
 
-    <!-- MAIN DASHBOARD CONTENT -->
-    <main class="admin-main admin-container">
-
-      <!-- ==================== TAB 1: PRODUCT INVENTORY ==================== -->
+    <!-- Main Content -->
+    <main class="admin-container main-content">
+      
+      <!-- ==================== TAB 1: PRODUCT CATALOG ==================== -->
       <section id="tabContentProducts" class="tab-content active">
         
+        <!-- Welcome & Stats Banner -->
         <div class="banner-section">
           <div class="banner-text">
-            <h1>📦 Agrochemicals & Seed Catalog</h1>
-            <p>Manage all genuine products, update stock availability, modify dosages, and upload images.</p>
+            <h1>Product Inventory Manager</h1>
+            <p>Add, edit, and organize all authorized seeds, pesticides, and bio-nutrients displayed on your website.</p>
           </div>
           <div class="banner-buttons">
             <button id="openAddModalBtn" class="btn btn-primary btn-lg">➕ Add New Product</button>
           </div>
         </div>
 
-        <!-- Inventory Stats -->
+        <!-- Stat Counters -->
         <div class="stats-row">
           <div class="stat-card">
             <span class="stat-icon">📦</span>
@@ -201,10 +200,10 @@
             </div>
           </div>
           <div class="stat-card">
-            <span class="stat-icon">🌾</span>
+            <span class="stat-icon">🌱</span>
             <div>
               <h3 id="statSeeds">0</h3>
-              <p>Certified Seeds</p>
+              <p>Crop Seeds</p>
             </div>
           </div>
           <div class="stat-card">
@@ -215,62 +214,70 @@
             </div>
           </div>
           <div class="stat-card">
-            <span class="stat-icon">🔬</span>
+            <span class="stat-icon">🧪</span>
             <div>
               <h3 id="statFungicides">0</h3>
               <p>Fungicides</p>
             </div>
           </div>
           <div class="stat-card">
-            <span class="stat-icon">🌿</span>
+            <span class="stat-icon">🍃</span>
             <div>
               <h3 id="statBio">0</h3>
-              <p>Bio Stimulants</p>
+              <p>Bio Products</p>
             </div>
           </div>
         </div>
 
-        <!-- Search & Filters Toolbar -->
+        <!-- Product Management Toolbar -->
         <div class="management-toolbar">
           <div class="search-box">
             <span class="search-icon">🔍</span>
-            <input type="text" id="adminSearchInput" placeholder="Search by name, brand, crop, target..." />
+            <input type="text" id="adminSearchInput" placeholder="Search by name, brand (Syngenta, DuPont, Agrico, etc.), crop, or problem..." />
           </div>
 
-          <div class="filter-group">
+          <div class="filter-controls">
             <select id="adminCategoryFilter">
               <option value="all">All Categories</option>
               <option value="seed">Seeds</option>
-              <option value="insecticide">Insecticide</option>
-              <option value="fungicide">Fungicide</option>
-              <option value="bio">Bio Product</option>
-              <option value="herbicide">Herbicide</option>
-              <option value="fertilizer">Fertilizer</option>
+              <option value="insecticide">Insecticides</option>
+              <option value="fungicide">Fungicides</option>
+              <option value="bio">Bio Products</option>
+              <option value="herbicide">Herbicides / Weedicides</option>
+              <option value="fertilizer">Fertilizers / Micronutrients</option>
             </select>
 
             <select id="adminStockFilter">
               <option value="all">All Stock Status</option>
-              <option value="instock">In Stock Only</option>
-              <option value="outofstock">Out of Stock Only</option>
+              <option value="instock">In Stock</option>
+              <option value="outofstock">Out of Stock</option>
             </select>
+          </div>
 
-            <button id="clearFiltersBtn" class="btn btn-outline">Reset</button>
+          <div class="utility-actions">
+            <button id="exportJsonBtn" class="btn btn-secondary" title="Download backup of products">💾 Backup Data</button>
+            <label class="btn btn-secondary upload-label" title="Restore products from backup JSON">
+              📥 Import Data
+              <input type="file" id="importJsonInput" accept=".json" style="display:none;" />
+            </label>
+            <button id="resetDefaultsBtn" class="btn btn-outline" title="Restore factory products">🔄 Reset Defaults</button>
           </div>
         </div>
 
-        <!-- Product Grid -->
+        <!-- Products Grid Display -->
         <div class="products-section">
           <div class="section-title-row">
-            <h2>Inventory Catalog (<span id="resultsCount">0</span>)</h2>
-            <small>Changes are saved to central database and reflect live on storefront.</small>
+            <h2>Product Inventory (<span id="resultsCount">0</span>)</h2>
+            <small>Changes save instantly to the live storefront.</small>
           </div>
 
           <div id="adminProductGrid" class="admin-product-grid">
-            <!-- Populated via admin.js -->
+            <!-- Populated dynamically via admin.js -->
           </div>
 
           <div id="noAdminResults" class="no-results hidden">
-            <p>No products match your search/filter criteria.</p>
+            <p>No products match your search or filter.</p>
+            <button class="btn btn-primary" id="clearFiltersBtn">Clear Filters</button>
           </div>
         </div>
 
@@ -281,15 +288,15 @@
         
         <div class="banner-section">
           <div class="banner-text">
-            <h1>🌾 Farmers Directory & Central Accounts</h1>
-            <p>Full control of all farmer profiles, account IDs, passwords, khata balances, and purchase records registered across all devices.</p>
+            <h1>🌾 Farmer Records & Khata Ledger</h1>
+            <p>Manage farmer profiles, land size, crop advice, and digital purchase passbooks.</p>
           </div>
           <div class="banner-buttons">
             <button id="openAddFarmerModalBtn" class="btn btn-primary btn-lg">➕ Register New Farmer</button>
           </div>
         </div>
 
-        <!-- Farmer Stats -->
+        <!-- Farmer Stats Row -->
         <div class="stats-row stats-three">
           <div class="stat-card">
             <span class="stat-icon">👨‍🌾</span>
@@ -321,7 +328,7 @@
             <input type="text" id="farmerSearchInput" placeholder="Search farmer by ID (e.g. KIS-1001), Name, Mobile, or Village..." />
           </div>
           <div class="utility-actions">
-            <button id="exportFarmersJsonBtn" class="btn btn-secondary">💾 Backup Farmers CSV</button>
+            <button id="exportFarmersJsonBtn" class="btn btn-secondary">💾 Backup Farmers DB</button>
           </div>
         </div>
 
@@ -329,7 +336,7 @@
         <div class="products-section">
           <div class="section-title-row">
             <h2>Farmer Customer Directory (<span id="farmersCount">0</span>)</h2>
-            <small>Full management: View Khata, Add Purchases, Reset Passwords, or Edit profile.</small>
+            <small>Click "View Khata" to see transactions or add new purchases.</small>
           </div>
 
           <div id="adminFarmerGrid" class="admin-farmer-grid">
@@ -435,75 +442,7 @@
 
       </section>
 
-      <!-- ==================== TAB 4: ENQUIRIES & AI DOCTOR SCANS ==================== -->
-      <section id="tabContentEnquiries" class="tab-content hidden">
-        
-        <div class="banner-section">
-          <div class="banner-text">
-            <h1>💬 Customer Enquiries & Live AI Doctor Scans</h1>
-            <p>Monitor all crop questions submitted on the website and review AI disease diagnoses run by farmers.</p>
-          </div>
-          <div class="banner-buttons">
-            <button id="refreshEnquiriesBtn" class="btn btn-secondary">🔄 Refresh Enquiries</button>
-          </div>
-        </div>
-
-        <!-- Customer Enquiries Panel -->
-        <div class="analytics-card full-span" style="margin-bottom:24px;">
-          <div class="panel-header">
-            <h3>📬 Customer Crop Advisory Requests & Inquiries (<span id="enquiryCountLabel">0</span>)</h3>
-            <small>Submitted via storefront contact form</small>
-          </div>
-          <div class="table-responsive">
-            <table class="khata-table">
-              <thead>
-                <tr>
-                  <th>Date & Time</th>
-                  <th>Customer Name</th>
-                  <th>Phone / WhatsApp</th>
-                  <th>Crop</th>
-                  <th>Message / Problem</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="enquiriesTableBody">
-                <!-- Dynamically populated via admin.js -->
-              </tbody>
-            </table>
-          </div>
-          <div id="noEnquiryMsg" class="no-records hidden" style="padding:16px; text-align:center;">No customer enquiries yet.</div>
-        </div>
-
-        <!-- Live AI Doctor Scans Panel -->
-        <div class="analytics-card full-span">
-          <div class="panel-header">
-            <h3>🤖 Real-Time AI Doctor Scans History (<span id="aiScanCountLabel">0</span>)</h3>
-            <small>Diseases and pests detected by online farmers</small>
-          </div>
-          <div class="table-responsive">
-            <table class="khata-table">
-              <thead>
-                <tr>
-                  <th>Timestamp</th>
-                  <th>Crop</th>
-                  <th>Detected Disease / Pest</th>
-                  <th>Confidence</th>
-                  <th>Recommended Product</th>
-                  <th>Dosage</th>
-                </tr>
-              </thead>
-              <tbody id="aiScansTableBody">
-                <!-- Dynamically populated via admin.js -->
-              </tbody>
-            </table>
-          </div>
-          <div id="noAiScanMsg" class="no-records hidden" style="padding:16px; text-align:center;">No AI scans logged yet.</div>
-        </div>
-
-      </section>
-
-      <!-- ==================== TAB 5: SEARCH ANALYTICS & DEMAND ==================== -->
+      <!-- ==================== TAB 4: SEARCH ANALYTICS & DEMAND ==================== -->
       <section id="tabContentAnalytics" class="tab-content hidden">
         
         <div class="banner-section">
@@ -551,13 +490,13 @@
 
       </section>
 
-      <!-- ==================== TAB 6: MASTER DATABASE & BACKUP CENTER ==================== -->
+      <!-- ==================== TAB 5: MASTER DATABASE & BACKUP CENTER ==================== -->
       <section id="tabContentDatabase" class="tab-content hidden">
         
         <div class="banner-section">
           <div class="banner-text">
             <h1>🗄️ Master Database Management & Backup Center</h1>
-            <p>Single control center for all database collections, Excel CSV exports, and 1-click JSON backup/restore.</p>
+            <p>Single control center for all 8 database collections, Excel CSV exports, and 1-click JSON backup/restore.</p>
           </div>
           <div class="banner-buttons">
             <button id="masterBackupJsonBtn" class="btn btn-primary btn-lg">💾 Download Master JSON Backup</button>
@@ -615,7 +554,6 @@
               <strong id="dbCountEnquiries">0</strong>
               <small>Customer Enquiries</small>
             </div>
-            <button class="btn btn-outline db-quick-csv" data-csv="enquiries">CSV</button>
           </div>
         </div>
 
@@ -668,29 +606,6 @@
 
   <!-- ==================== MODALS ==================== -->
 
-  <!-- RESET FARMER PASSWORD MODAL (FOR ADMIN CONTROL) -->
-  <div id="resetFarmerPassModal" class="modal-backdrop hidden">
-    <div class="modal-card modal-sm">
-      <div class="modal-header">
-        <h2>🔑 Reset Farmer Password</h2>
-        <button id="closeResetFarmerPassModalBtn" class="close-btn">&times;</button>
-      </div>
-      <form id="resetFarmerPassForm" class="modal-form">
-        <input type="hidden" id="resetFarmerTargetId" />
-        <p id="resetFarmerTargetMeta" style="font-weight:700; color:var(--green); margin-bottom:12px;"></p>
-
-        <div class="form-group">
-          <label for="adminNewPassInput">New Password for Farmer *</label>
-          <input type="password" id="adminNewPassInput" required placeholder="Enter new password (min 4 chars)" />
-        </div>
-        <div class="modal-actions">
-          <button type="button" id="cancelResetFarmerPassBtn" class="btn btn-outline">Cancel</button>
-          <button type="submit" class="btn btn-primary">💾 Save Password in DB</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
   <!-- CREATE POS INVOICE MODAL -->
   <div id="createInvoiceModal" class="modal-backdrop hidden">
     <div class="modal-card" style="width:min(850px, 100%);">
@@ -706,6 +621,7 @@
             <label for="invSelectFarmer">Select Registered Farmer (Or Walk-in)</label>
             <select id="invSelectFarmer">
               <option value="WALK-IN">-- Walk-in Customer (General) --</option>
+              <!-- Populated dynamically -->
             </select>
           </div>
           <div class="form-group">
@@ -959,11 +875,7 @@
             <label for="farmerLandInput">Land Area</label>
             <input type="text" id="farmerLandInput" placeholder="e.g. 15 Bigha / 3 Acres" />
           </div>
-          <div class="form-group">
-            <label for="farmerPasswordInput">Login Password *</label>
-            <input type="password" id="farmerPasswordInput" placeholder="Set farmer login password" />
-          </div>
-          <div class="form-group">
+          <div class="form-group full-width">
             <label for="farmerCropsInput">Primary Crops *</label>
             <input type="text" id="farmerCropsInput" required placeholder="e.g. Sugarcane, Wheat, Paddy, Tomato" />
           </div>
@@ -999,7 +911,7 @@
         </div>
         <div class="form-group">
           <label for="txProduct">Product / Medicine Name *</label>
-          <input type="text" id="txProduct" required placeholder="e.g. Incipio (100ml) + Isabion" />
+          <input type="text" id="txProduct" required placeholder="e.g. Miravis Duo (250ml) + Isabion" />
         </div>
         <div class="form-group">
           <label for="txQty">Quantity / Pack Size</label>
