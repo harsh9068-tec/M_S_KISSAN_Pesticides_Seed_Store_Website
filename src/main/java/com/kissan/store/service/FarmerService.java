@@ -3,7 +3,6 @@ package com.kissan.store.service;
 import com.kissan.store.model.Farmer;
 import com.kissan.store.model.KhataTransaction;
 import com.kissan.store.repository.FarmerRepository;
-import com.kissan.store.repository.KhataTransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,9 +15,6 @@ public class FarmerService {
 
     @Autowired
     private FarmerRepository farmerRepository;
-
-    @Autowired
-    private KhataTransactionRepository khataRepository;
 
     public List<Farmer> getAllFarmers() {
         return farmerRepository.findAll();
