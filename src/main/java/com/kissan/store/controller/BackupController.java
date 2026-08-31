@@ -1,8 +1,5 @@
 package com.kissan.store.controller;
 
-import com.kissan.store.model.Farmer;
-import com.kissan.store.model.Invoice;
-import com.kissan.store.model.Product;
 import com.kissan.store.service.FarmerService;
 import com.kissan.store.service.InvoiceService;
 import com.kissan.store.service.ProductService;
@@ -16,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import java.time.LocalDateTime;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @RestController

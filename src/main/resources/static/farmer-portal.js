@@ -141,7 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ==================== OTP LOGIN STEP 2: VERIFY & AUTHENTICATE ====================
-  farmerLoginForm?.addEventListener('submit', (e) => {
+  farmerLoginForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const enteredOtp = loginOtpInput.value.trim();
 
@@ -151,21 +151,32 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     let authResult = null;
-    if (window.KISSAN_DB && window.KISSAN_DB.farmers) {
+    if (window.KISSAN_API) {
+      authResult = await window.KISSAN_API.verifyOTP(activeMobileForOtp, enteredOtp);
+    }
+    if ((!authResult || !authResult.success) && window.KISSAN_DB && window.KISSAN_DB.farmers) {
       authResult = window.KISSAN_DB.farmers.loginWithOTP(activeMobileForOtp, enteredOtp);
     }
 
     if (authResult && authResult.success) {
       loginError.textContent = '';
       clearInterval(countdownTimer);
-      checkFarmerAuth();
+
+      // Fetch live farmer profile from backend
+      if (window.KISSAN_API) {
+        const liveFarmer = await window.KISSAN_API.getFarmerByIdOrMobile(activeMobileForOtp);
+        if (liveFarmer) {
+          sessionStorage.setItem('kissan_active_farmer', JSON.stringify(liveFarmer));
+        }
+      }
+      await checkFarmerAuth();
     } else {
       loginError.textContent = authResult ? authResult.message : 'गलत ओटीपी। कृपया पुनः प्रयास करें।';
     }
   });
 
-  // ==================== FARMER REGISTRATION (CLOUD SYNCED) ====================
-  farmerRegisterForm?.addEventListener('submit', (e) => {
+  // ==================== FARMER REGISTRATION (CLOUD & SQL SYNCED) ====================
+  farmerRegisterForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = document.getElementById('regName').value.trim();
     const mobile = document.getElementById('regMobile').value.trim();
@@ -178,22 +189,42 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    const submitBtn = farmerRegisterForm.querySelector('button[type="submit"]');
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'पंजीकरण हो रहा है...';
+    }
+
+    const farmerPayload = {
+      name,
+      mobile,
+      village: village || 'Village Behra Sadat',
+      landSize: landSize || 'Not Specified',
+      crops: crops || 'Sugarcane, Wheat',
+      registeredDate: new Date().toISOString().slice(0, 10),
+      notes: 'Registered via Mobile Farmer Portal'
+    };
+
     let newFarmer = null;
-    if (window.KISSAN_DB && window.KISSAN_DB.farmers) {
-      newFarmer = window.KISSAN_DB.farmers.add({
-        name,
-        mobile,
-        village,
-        landSize,
-        crops
-      });
+    if (window.KISSAN_API) {
+      newFarmer = await window.KISSAN_API.registerFarmer(farmerPayload);
+    }
+    if (!newFarmer && window.KISSAN_DB && window.KISSAN_DB.farmers) {
+      newFarmer = window.KISSAN_DB.farmers.add(farmerPayload);
+    }
+
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'पंजीकरण करें (Register Now) →';
     }
 
     if (newFarmer) {
       sessionStorage.setItem('kissan_active_farmer', JSON.stringify(newFarmer));
       registerError.textContent = '';
-      alert(`पंजीकरण सफल! आपकी किसान ID: ${newFarmer.id}\nअब आप किसी भी फोन पर अपने मोबाइल से लॉगिन कर सकते हैं।`);
-      checkFarmerAuth();
+      alert(`पंजीकरण सफल! आपकी किसान ID: ${newFarmer.id}\nयह आईडी अब दुकान के एडमिन सिस्टम व डाटाबेस में भी दर्ज हो गई है।`);
+      await checkFarmerAuth();
+    } else {
+      registerError.textContent = 'पंजीकरण में त्रुटि हुई। कृपया पुनः प्रयास करें।';
     }
   });
 
@@ -203,16 +234,22 @@ document.addEventListener('DOMContentLoaded', () => {
     checkFarmerAuth();
   });
 
-  // Check Active Farmer Authentication
-  function checkFarmerAuth() {
+  // Check Active Farmer Authentication (Live SQL / Backend Sync)
+  async function checkFarmerAuth() {
     let activeFarmer = null;
     try {
       const raw = sessionStorage.getItem('kissan_active_farmer');
       if (raw) activeFarmer = JSON.parse(raw);
     } catch (e) {}
 
-    // Cross-verify with current database
-    if (activeFarmer && window.KISSAN_DB && window.KISSAN_DB.farmers) {
+    // Cross-verify with backend database
+    if (activeFarmer && window.KISSAN_API) {
+      const live = await window.KISSAN_API.getFarmerByIdOrMobile(activeFarmer.id || activeFarmer.mobile);
+      if (live) {
+        activeFarmer = live;
+        sessionStorage.setItem('kissan_active_farmer', JSON.stringify(live));
+      }
+    } else if (activeFarmer && window.KISSAN_DB && window.KISSAN_DB.farmers) {
       const live = window.KISSAN_DB.farmers.getById(activeFarmer.id || activeFarmer.mobile);
       if (live) activeFarmer = live;
     }

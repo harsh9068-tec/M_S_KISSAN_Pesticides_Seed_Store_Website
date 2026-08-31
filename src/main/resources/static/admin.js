@@ -246,8 +246,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const prodInStock = document.getElementById('prodInStock');
   const prodFeatured = document.getElementById('prodFeatured');
 
-  function loadProductsTab() {
-    products = window.KISSAN_DB ? window.KISSAN_DB.products.getAll() : [];
+  async function loadProductsTab() {
+    if (window.KISSAN_API) {
+      products = await window.KISSAN_API.getProducts();
+    } else {
+      products = window.KISSAN_DB ? window.KISSAN_DB.products.getAll() : [];
+    }
     updateProductStats();
     renderAdminProducts();
   }
@@ -329,19 +333,27 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
     `;
 
-    card.querySelector('.toggle-stock-btn').addEventListener('click', () => {
+    card.querySelector('.toggle-stock-btn').addEventListener('click', async () => {
       p.inStock = !p.inStock;
-      window.KISSAN_DB.products.update(p.id, { inStock: p.inStock });
-      loadProductsTab();
+      if (window.KISSAN_API) {
+        await window.KISSAN_API.saveProduct(p);
+      } else {
+        window.KISSAN_DB.products.update(p.id, { inStock: p.inStock });
+      }
+      await loadProductsTab();
       showToast(`${p.name} marked as ${p.inStock ? 'In Stock' : 'Out of Stock'}.`);
     });
 
     card.querySelector('.edit-btn').addEventListener('click', () => openEditProductModal(p));
 
-    card.querySelector('.delete-btn').addEventListener('click', () => {
+    card.querySelector('.delete-btn').addEventListener('click', async () => {
       if (confirm(`Are you sure you want to delete "${p.name}"?`)) {
-        window.KISSAN_DB.products.delete(p.id);
-        loadProductsTab();
+        if (window.KISSAN_API) {
+          await window.KISSAN_API.deleteProduct(p.id);
+        } else {
+          window.KISSAN_DB.products.delete(p.id);
+        }
+        await loadProductsTab();
         showToast(`Deleted ${p.name}`);
       }
     });
@@ -395,7 +407,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  productForm.addEventListener('submit', (e) => {
+  productForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const id = editProductId.value;
 
@@ -412,17 +424,19 @@ document.addEventListener('DOMContentLoaded', () => {
       inStock: prodInStock.checked,
       featured: prodFeatured.checked
     };
+    if (id) data.id = id;
 
-    if (id) {
+    if (window.KISSAN_API) {
+      await window.KISSAN_API.saveProduct(data);
+    } else if (id) {
       window.KISSAN_DB.products.update(id, data);
-      showToast(`Updated "${data.name}"`);
     } else {
       window.KISSAN_DB.products.add(data);
-      showToast(`Added "${data.name}" to inventory!`);
     }
 
+    showToast(id ? `Updated "${data.name}"` : `Added "${data.name}" to inventory!`);
     closeProductModal();
-    loadProductsTab();
+    await loadProductsTab();
   });
 
   adminSearchInput.addEventListener('input', renderAdminProducts);
@@ -486,8 +500,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const noStmtMsg = document.getElementById('noStmtMsg');
   const sendWaKhataBtn = document.getElementById('sendWaKhataBtn');
 
-  function loadFarmersTab() {
-    farmers = window.KISSAN_DB ? window.KISSAN_DB.farmers.getAll() : [];
+  async function loadFarmersTab() {
+    if (window.KISSAN_API) {
+      farmers = await window.KISSAN_API.getFarmers();
+    } else {
+      farmers = window.KISSAN_DB ? window.KISSAN_DB.farmers.getAll() : [];
+    }
     updateFarmerStats();
     renderFarmersGrid();
   }
@@ -567,10 +585,14 @@ document.addEventListener('DOMContentLoaded', () => {
     card.querySelector('.btn-view-khata').addEventListener('click', () => openStatementModal(f));
     card.querySelector('.btn-add-khata').addEventListener('click', () => openKhataModal(f));
     card.querySelector('.btn-edit-farmer').addEventListener('click', () => openEditFarmerModal(f));
-    card.querySelector('.btn-delete-farmer').addEventListener('click', () => {
+    card.querySelector('.btn-delete-farmer').addEventListener('click', async () => {
       if (confirm(`Are you sure you want to delete ${f.name} (${f.id}) and their khata history?`)) {
-        window.KISSAN_DB.farmers.delete(f.id);
-        loadFarmersTab();
+        if (window.KISSAN_API) {
+          await window.KISSAN_API.deleteFarmer(f.id);
+        } else {
+          window.KISSAN_DB.farmers.delete(f.id);
+        }
+        await loadFarmersTab();
         showToast(`Farmer ${f.name} deleted.`);
       }
     });
@@ -603,7 +625,7 @@ document.addEventListener('DOMContentLoaded', () => {
   closeFarmerModalBtn.addEventListener('click', () => farmerModal.classList.add('hidden'));
   cancelFarmerModalBtn.addEventListener('click', () => farmerModal.classList.add('hidden'));
 
-  farmerForm.addEventListener('submit', (e) => {
+  farmerForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const id = editFarmerId.value;
 
@@ -617,15 +639,25 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     if (id) {
-      window.KISSAN_DB.farmers.update(id, data);
+      data.id = id;
+      if (window.KISSAN_API) {
+        await window.KISSAN_API.updateFarmer(id, data);
+      } else {
+        window.KISSAN_DB.farmers.update(id, data);
+      }
       showToast(`Updated profile for ${data.name}`);
     } else {
-      const added = window.KISSAN_DB.farmers.add(data);
-      showToast(`Registered new farmer ${added.name} (${added.id})!`);
+      let added = null;
+      if (window.KISSAN_API) {
+        added = await window.KISSAN_API.registerFarmer(data);
+      } else {
+        added = window.KISSAN_DB.farmers.add(data);
+      }
+      showToast(`Registered new farmer ${added ? added.name : data.name} (${added ? added.id : 'Saved'})!`);
     }
 
     farmerModal.classList.add('hidden');
-    loadFarmersTab();
+    await loadFarmersTab();
   });
 
   farmerSearchInput.addEventListener('input', renderFarmersGrid);
@@ -643,7 +675,7 @@ document.addEventListener('DOMContentLoaded', () => {
   closeKhataModalBtn.addEventListener('click', () => khataModal.classList.add('hidden'));
   cancelKhataModalBtn.addEventListener('click', () => khataModal.classList.add('hidden'));
 
-  khataEntryForm.addEventListener('submit', (e) => {
+  khataEntryForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!activeFarmerForKhata) return;
 
@@ -656,10 +688,15 @@ document.addEventListener('DOMContentLoaded', () => {
       notes: txNotes.value.trim()
     };
 
-    window.KISSAN_DB.farmers.addKhataEntry(activeFarmerForKhata.id, entry);
+    if (window.KISSAN_API) {
+      await window.KISSAN_API.addKhataTransaction(activeFarmerForKhata.id, entry);
+    } else {
+      window.KISSAN_DB.farmers.addKhataEntry(activeFarmerForKhata.id, entry);
+    }
+
     showToast(`Purchase added to ${activeFarmerForKhata.name}'s Khata!`);
     khataModal.classList.add('hidden');
-    loadFarmersTab();
+    await loadFarmersTab();
   });
 
   // Statement / Passbook Modal
@@ -765,8 +802,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const rcptDue = document.getElementById('rcptDue');
   const rcptMode = document.getElementById('rcptMode');
 
-  function loadInvoicesTab() {
-    invoices = window.KISSAN_DB ? window.KISSAN_DB.invoices.getAll() : [];
+  async function loadInvoicesTab() {
+    if (window.KISSAN_API) {
+      invoices = await window.KISSAN_API.getInvoices();
+    } else {
+      invoices = window.KISSAN_DB ? window.KISSAN_DB.invoices.getAll() : [];
+    }
     updateInvoiceStats();
     renderInvoicesTable();
   }
@@ -842,10 +883,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         tr.querySelector('.btn-view-rcpt').addEventListener('click', () => openInvoiceReceipt(inv));
         tr.querySelector('.btn-wa-rcpt').addEventListener('click', () => sendInvoiceWhatsApp(inv));
-        tr.querySelector('.btn-del-inv').addEventListener('click', () => {
+        tr.querySelector('.btn-del-inv').addEventListener('click', async () => {
           if (confirm(`Delete Invoice #${inv.id}?`)) {
             window.KISSAN_DB.invoices.delete(inv.id);
-            loadInvoicesTab();
+            await loadInvoicesTab();
             showToast(`Invoice #${inv.id} deleted.`);
           }
         });
@@ -1021,14 +1062,21 @@ document.addEventListener('DOMContentLoaded', () => {
       notes: invNotes.value.trim()
     };
 
-    const created = window.KISSAN_DB.invoices.create(invoiceData);
+    let created = null;
+    if (window.KISSAN_API) {
+      created = await window.KISSAN_API.createInvoice(invoiceData);
+    }
+    if (!created) {
+      created = window.KISSAN_DB.invoices.create(invoiceData);
+    }
+
     createInvoiceModal.classList.add('hidden');
-    loadInvoicesTab();
-    loadFarmersTab();
-    showToast(`Invoice #${created.id} generated successfully!`);
+    await loadInvoicesTab();
+    await loadFarmersTab();
+    showToast(`Invoice #${created ? created.id : 'Created'} generated successfully!`);
 
     // Open receipt modal automatically
-    openInvoiceReceipt(created);
+    if (created) openInvoiceReceipt(created);
   });
 
   // Invoice Receipt & WhatsApp
@@ -1270,6 +1318,33 @@ document.addEventListener('DOMContentLoaded', () => {
     closePinModal();
     showToast('Security PIN changed securely!');
   });
+
+  // Background Real-Time Multi-Device Sync (every 10s)
+  setInterval(async () => {
+    const isAuthed = sessionStorage.getItem('kissan_admin_auth') === 'true';
+    if (!isAuthed || document.hidden) return;
+
+    const activeTab = document.querySelector('.nav-tab.active')?.dataset.tab;
+    if (activeTab === 'farmers') {
+      if (window.KISSAN_API) {
+        farmers = await window.KISSAN_API.getFarmers();
+        updateFarmerStats();
+        renderFarmersGrid();
+      }
+    } else if (activeTab === 'invoices') {
+      if (window.KISSAN_API) {
+        invoices = await window.KISSAN_API.getInvoices();
+        updateInvoiceStats();
+        renderInvoicesTable();
+      }
+    } else if (activeTab === 'products') {
+      if (window.KISSAN_API) {
+        products = await window.KISSAN_API.getProducts();
+        updateProductStats();
+        renderAdminProducts();
+      }
+    }
+  }, 10000);
 
   // Initial Auth Check
   checkAuth();

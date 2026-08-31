@@ -138,60 +138,32 @@
     }
   ];
 
-  // ==================== CENTRAL CLOUD SYNC RELAY ====================
-  const CLOUD_CONFIG = {
-    endpoint: 'https://kissan-store-cloud-default-rtdb.firebaseio.com'
-  };
-
+  // ==================== CENTRAL CLOUD & SPRING BOOT SYNC RELAY ====================
   const CloudSyncEngine = {
-    async syncPush(table, data) {
-      try {
-        if (!navigator.onLine) return false;
-        await fetch(`${CLOUD_CONFIG.endpoint}/${table}.json`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
-        return true;
-      } catch (err) {
-        return false;
-      }
-    },
-
-    async syncPull(table) {
-      try {
-        if (!navigator.onLine) return null;
-        const res = await fetch(`${CLOUD_CONFIG.endpoint}/${table}.json`);
-        if (res.ok) return await res.json();
-        return null;
-      } catch (err) {
-        return null;
-      }
-    },
-
     async syncAll() {
       try {
-        const cloudFarmers = await this.syncPull('farmers');
-        if (Array.isArray(cloudFarmers) && cloudFarmers.length > 0) {
-          const localFarmers = FarmersController.getAllLocal();
-          const merged = [...cloudFarmers];
-          localFarmers.forEach(localF => {
-            if (!merged.some(c => c.mobile === localF.mobile || c.id === localF.id)) {
-              merged.push(localF);
-            }
-          });
-          setRaw(KEYS.FARMERS, merged);
-        }
+        if (window.KISSAN_API) {
+          const [serverFarmers, serverProducts, serverInvoices] = await Promise.allSettled([
+            window.KISSAN_API.getFarmers(),
+            window.KISSAN_API.getProducts(),
+            window.KISSAN_API.getInvoices()
+          ]);
 
-        const cloudInvoices = await this.syncPull('invoices');
-        if (Array.isArray(cloudInvoices) && cloudInvoices.length > 0) {
-          setRaw(KEYS.INVOICES, cloudInvoices);
+          if (serverFarmers.status === 'fulfilled' && Array.isArray(serverFarmers.value) && serverFarmers.value.length > 0) {
+            setRaw(KEYS.FARMERS, serverFarmers.value);
+          }
+          if (serverProducts.status === 'fulfilled' && Array.isArray(serverProducts.value) && serverProducts.value.length > 0) {
+            setRaw(KEYS.PRODUCTS, serverProducts.value);
+          }
+          if (serverInvoices.status === 'fulfilled' && Array.isArray(serverInvoices.value) && serverInvoices.value.length > 0) {
+            setRaw(KEYS.INVOICES, serverInvoices.value);
+          }
         }
       } catch (e) {}
     }
   };
 
-  setTimeout(() => CloudSyncEngine.syncAll(), 300);
+  setTimeout(() => CloudSyncEngine.syncAll(), 500);
 
   // Storage Helpers
   function getRaw(key, defaultVal) {
@@ -313,8 +285,18 @@
       };
       list.unshift(newProd);
       setRaw(KEYS.PRODUCTS, list);
-      CloudSyncEngine.syncPush('products', list);
       return newProd;
+    },
+    updateOrAddLocal(product) {
+      const list = this.getAll();
+      const idx = list.findIndex(p => p.id === product.id);
+      if (idx !== -1) {
+        list[idx] = { ...list[idx], ...product };
+      } else {
+        list.unshift(product);
+      }
+      setRaw(KEYS.PRODUCTS, list);
+      return product;
     },
     update(id, updatedData) {
       const list = this.getAll();
@@ -322,21 +304,21 @@
       if (idx !== -1) {
         list[idx] = { ...list[idx], ...updatedData };
         setRaw(KEYS.PRODUCTS, list);
-        CloudSyncEngine.syncPush('products', list);
         return list[idx];
       }
       return null;
     },
-    delete(id) {
+    deleteLocal(id) {
       let list = this.getAll();
       list = list.filter(p => p.id !== id);
       setRaw(KEYS.PRODUCTS, list);
-      CloudSyncEngine.syncPush('products', list);
       return true;
+    },
+    delete(id) {
+      return this.deleteLocal(id);
     },
     saveAll(list) {
       setRaw(KEYS.PRODUCTS, list);
-      CloudSyncEngine.syncPush('products', list);
       return true;
     }
   };
@@ -359,6 +341,19 @@
                f.id.toLowerCase() === cleanId ||
                f.mobile.toLowerCase() === cleanId;
       }) || null;
+    },
+    saveToLocalCache(farmer) {
+      if (!farmer) return;
+      const list = this.getAll();
+      const cleanMobile = normalizePhone(farmer.mobile) || String(farmer.mobile).trim();
+      const idx = list.findIndex(f => f.id === farmer.id || (cleanMobile && normalizePhone(f.mobile) === cleanMobile));
+      if (idx !== -1) {
+        list[idx] = { ...list[idx], ...farmer };
+      } else {
+        list.unshift(farmer);
+      }
+      setRaw(KEYS.FARMERS, list);
+      return farmer;
     },
     add(farmer) {
       const list = this.getAll();
@@ -383,7 +378,6 @@
 
       list.unshift(newFarmer);
       setRaw(KEYS.FARMERS, list);
-      CloudSyncEngine.syncPush('farmers', list);
       return newFarmer;
     },
     update(id, updatedData) {
@@ -392,17 +386,18 @@
       if (idx !== -1) {
         list[idx] = { ...list[idx], ...updatedData };
         setRaw(KEYS.FARMERS, list);
-        CloudSyncEngine.syncPush('farmers', list);
         return list[idx];
       }
       return null;
     },
-    delete(id) {
+    deleteLocal(id) {
       let list = this.getAll();
       list = list.filter(f => f.id !== id);
       setRaw(KEYS.FARMERS, list);
-      CloudSyncEngine.syncPush('farmers', list);
       return true;
+    },
+    delete(id) {
+      return this.deleteLocal(id);
     },
     addKhataEntry(farmerId, entry) {
       const list = this.getAll();
@@ -425,7 +420,6 @@
 
       farmer.khata.unshift(tx);
       setRaw(KEYS.FARMERS, list);
-      CloudSyncEngine.syncPush('farmers', list);
       return tx;
     },
     loginWithOTP(mobileOrId, otpCode) {
@@ -436,7 +430,6 @@
       const cleanPhone = normalizePhone(mobileOrId);
 
       if (!farmer && cleanPhone.length === 10) {
-        // Auto-register new farmer profile
         farmer = this.add({
           name: 'Farmer (' + cleanPhone.slice(-4) + ')',
           mobile: cleanPhone,
@@ -467,6 +460,18 @@
       const year = new Date().getFullYear();
       return `INV-${year}-${nextNum}`;
     },
+    saveToLocalCache(invoice) {
+      if (!invoice) return;
+      const list = this.getAll();
+      const idx = list.findIndex(i => i.id === invoice.id);
+      if (idx !== -1) {
+        list[idx] = { ...list[idx], ...invoice };
+      } else {
+        list.unshift(invoice);
+      }
+      setRaw(KEYS.INVOICES, list);
+      return invoice;
+    },
     create(data) {
       const invoices = this.getAll();
       const newInv = {
@@ -490,7 +495,6 @@
 
       invoices.unshift(newInv);
       setRaw(KEYS.INVOICES, invoices);
-      CloudSyncEngine.syncPush('invoices', invoices);
 
       if (newInv.farmerId && newInv.farmerId.startsWith('KIS-')) {
         const itemSummary = newInv.items.map(i => `${i.name} (x${i.qty})`).join(', ');
@@ -510,7 +514,6 @@
       let list = this.getAll();
       list = list.filter(inv => inv.id !== id);
       setRaw(KEYS.INVOICES, list);
-      CloudSyncEngine.syncPush('invoices', list);
       return true;
     }
   };
