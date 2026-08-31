@@ -24,42 +24,11 @@
       <p class="auth-desc">Enter your Store Security PIN & 2-Factor OTP to access store management.</p>
       
       <form id="loginForm" class="auth-form">
-        <!-- Step 1: Security PIN -->
-        <div id="adminPinStep">
-          <div class="input-group">
-            <label for="adminPinInput">Security PIN</label>
-            <input type="password" id="adminPinInput" maxlength="12" placeholder="Enter Security PIN" autocomplete="current-password" autofocus required />
-          </div>
-          <button type="button" id="adminVerifyPinBtn" class="btn btn-primary btn-full">Next: 2FA Verification →</button>
+        <div class="input-group">
+          <label for="adminPinInput">Security PIN</label>
+          <input type="password" id="adminPinInput" maxlength="12" placeholder="Enter PIN (908442)" autocomplete="current-password" autofocus required />
         </div>
-
-        <!-- Step 2: 2FA OTP -->
-        <div id="adminOtpStep" class="hidden">
-          <div class="otp-banner-box" style="margin-bottom:14px; background:#edf7ec; padding:10px 14px; border-radius:12px; border:1px solid #c2e2be; display:flex; align-items:center; gap:10px;">
-            <span style="font-size:22px;">🔐</span>
-            <div>
-              <strong style="display:block; font-size:13px; color:var(--green);">2FA Security Code Sent</strong>
-              <small style="display:block; font-size:11px; color:var(--muted);">Mr. Mahipal Singh (9760153116)</small>
-            </div>
-          </div>
-
-          <div class="input-group">
-            <label for="adminOtpInput">Enter 6-Digit Admin OTP</label>
-            <input type="password" id="adminOtpInput" maxlength="6" placeholder="• • • • • •" style="letter-spacing:6px; font-size:22px; text-align:center; font-weight:800;" autocomplete="one-time-code" required />
-          </div>
-
-          <button type="submit" class="btn btn-primary btn-full">Unlock Dashboard →</button>
-
-          <div style="display:flex; gap:8px; align-items:center; justify-content:space-between; margin-top:10px;">
-            <a id="adminWaOtpLink" href="#" target="_blank" class="btn btn-whatsapp" style="padding:6px 12px; font-size:12px;">
-              💬 Get OTP on WhatsApp
-            </a>
-            <button type="button" id="adminBackToPinBtn" class="btn btn-outline" style="padding:6px 12px; font-size:12px;">
-              ← Back to PIN
-            </button>
-          </div>
-        </div>
-
+        <button type="submit" id="adminVerifyPinBtn" class="btn btn-primary btn-full" style="margin-top:8px;">Unlock Dashboard →</button>
         <p id="authError" class="auth-error" style="margin-top:10px;"></p>
       </form>
 
@@ -1019,11 +988,11 @@
   <div id="toastContainer" class="toast-container"></div>
 
   <!-- Load Master DB and Admin Scripts -->
-  <script src="theme-manager.js"></script>
-  <script src="kissan-master-db.js"></script>
-  <script src="api-client.js"></script>
-  <script src="products-data.js"></script>
-  <script src="farmer-db.js"></script>
-  <script src="admin.js"></script>
+  <script src="theme-manager.js?v=2.2"></script>
+  <script src="kissan-master-db.js?v=2.2"></script>
+  <script src="api-client.js?v=2.2"></script>
+  <script src="products-data.js?v=2.2"></script>
+  <script src="farmer-db.js?v=2.2"></script>
+  <script src="admin.js?v=2.2"></script>
 </body>
 </html>
