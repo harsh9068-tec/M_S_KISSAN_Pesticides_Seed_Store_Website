@@ -59,126 +59,240 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 2FA Admin OTP Elements
+  // ==================== AUTHENTICATION & SECURITY (2-STEP 2FA) ====================
   const adminPinStep = document.getElementById('adminPinStep');
   const adminOtpStep = document.getElementById('adminOtpStep');
   const adminVerifyPinBtn = document.getElementById('adminVerifyPinBtn');
   const adminOtpInput = document.getElementById('adminOtpInput');
   const adminWaOtpLink = document.getElementById('adminWaOtpLink');
   const adminBackToPinBtn = document.getElementById('adminBackToPinBtn');
+  const resendOtpBtn = document.getElementById('resendOtpBtn');
+  const authScreenDesc = document.getElementById('authScreenDesc');
   const adminMobile = '9760153116';
-  let currentGeneratedOtp = '123456';
+  let currentGeneratedOtp = '';
 
-  // Step 1: Verify PIN & Trigger 2FA OTP
+  function unlockDashboardSuccess() {
+    sessionStorage.setItem('kissan_admin_auth', 'true');
+    if (authError) authError.textContent = '';
+    if (adminPinInput) adminPinInput.value = '';
+    if (adminOtpInput) adminOtpInput.value = '';
+    currentGeneratedOtp = '';
+    if (adminOtpStep) adminOtpStep.classList.add('hidden');
+    if (adminPinStep) adminPinStep.classList.remove('hidden');
+    checkAuth();
+    showToast('Admin authenticated successfully! Dashboard unlocked.');
+  }
+
+  // Generate OTP and send via WhatsApp
+  function generateAndSendOtp() {
+    // Generate cryptographically random 6-digit OTP
+    const array = new Uint32Array(1);
+    crypto.getRandomValues(array);
+    currentGeneratedOtp = String(100000 + (array[0] % 900000));
+
+    // Also store in backend OTP service if available
+    if (window.KISSAN_DB && window.KISSAN_DB.otp) {
+      try {
+        const otpRes = window.KISSAN_DB.otp.generate('admin_master', 'admin_login');
+        if (otpRes && otpRes.code) currentGeneratedOtp = otpRes.code;
+      } catch (e) { }
+    }
+
+    // Try backend OTP generation
+    if (window.KISSAN_API) {
+      fetch(`${window.KISSAN_API.baseUrl}/auth/otp/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phoneOrId: 'admin_master' })
+      }).catch(() => { });
+    }
+
+    // Send OTP via WhatsApp to registered mobile
+    const waMsg = encodeURIComponent(
+      `🔐 M/S KISSAN Admin OTP\n\nYour 2FA verification code is: *${currentGeneratedOtp}*\n\nValid for 5 minutes. Do NOT share with anyone.\n\n- M/S KISSAN Security System`
+    );
+    const waLink = `https://wa.me/91${adminMobile}?text=${waMsg}`;
+
+    // Update the WhatsApp link
+    if (adminWaOtpLink) adminWaOtpLink.href = waLink;
+
+    // Auto-open WhatsApp in a new tab to deliver OTP
+    window.open(waLink, '_blank');
+
+    return currentGeneratedOtp;
+  }
+
+  // Step 1: Verify PIN & Go to 2FA OTP Step
   async function handleAdminPinVerification() {
-    const enteredPin = adminPinInput.value.trim();
+    const enteredPin = (adminPinInput ? adminPinInput.value : '').trim();
     if (!enteredPin) {
-      authError.textContent = 'कृपया सिक्योरिटी पिन (908442) दर्ज करें।';
-      adminPinInput.focus();
+      if (authError) authError.textContent = 'कृपया सिक्योरिटी पिन दर्ज करें।';
+      adminPinInput?.focus();
       return;
     }
 
-    let isCorrect = (enteredPin === '908442' || enteredPin === '1122');
+    // Disable button to prevent double click
+    if (adminVerifyPinBtn) {
+      adminVerifyPinBtn.disabled = true;
+      adminVerifyPinBtn.textContent = 'Verifying...';
+    }
+
+    let isCorrect = false;
+
+    // Primary: Backend PIN verification
+    if (window.KISSAN_API) {
+      try {
+        const res = await fetch(`${window.KISSAN_API.baseUrl}/auth/admin/verify-pin`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pin: enteredPin })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) isCorrect = true;
+        }
+      } catch (e) { }
+    }
+
+    // Fallback: Local PIN verification (SHA-256 hash)
     if (!isCorrect && window.ProductStore && window.ProductStore.verifyPin) {
-      isCorrect = await window.ProductStore.verifyPin(enteredPin);
+      try {
+        isCorrect = await window.ProductStore.verifyPin(enteredPin);
+      } catch (e) { }
+    }
+
+    // Re-enable button
+    if (adminVerifyPinBtn) {
+      adminVerifyPinBtn.disabled = false;
+      adminVerifyPinBtn.textContent = 'Next: Send OTP to Mobile \u2192';
     }
 
     if (isCorrect) {
-      authError.textContent = '';
+      if (authError) authError.textContent = '';
       localStorage.setItem('kissan_admin_fails', '0');
       localStorage.removeItem('kissan_admin_lock_until');
 
-      // Generate Admin 2FA OTP
-      let otpRes = { code: '123456' };
-      if (window.KISSAN_DB && window.KISSAN_DB.otp) {
-        otpRes = window.KISSAN_DB.otp.generate('admin_master', 'admin_login');
-      }
-      currentGeneratedOtp = otpRes.code || '123456';
+      // Generate and SEND OTP privately via WhatsApp
+      generateAndSendOtp();
 
-      if (adminWaOtpLink && window.KISSAN_DB && window.KISSAN_DB.otp) {
-        adminWaOtpLink.href = window.KISSAN_DB.otp.getWhatsAppOtpLink(adminMobile, currentGeneratedOtp, 'admin');
-      }
-
-      // Switch to Step 2: OTP screen
-      adminPinStep.classList.add('hidden');
-      adminOtpStep.classList.remove('hidden');
-      adminOtpInput.value = '';
-      adminOtpInput.focus();
-      showToast('2FA OTP code generated! Check WhatsApp or enter OTP.');
+      // Transition to OTP step
+      if (adminPinStep) adminPinStep.classList.add('hidden');
+      if (adminOtpStep) adminOtpStep.classList.remove('hidden');
+      if (authScreenDesc) authScreenDesc.textContent = 'OTP has been sent to your registered WhatsApp number.';
+      adminOtpInput?.focus();
+      showToast('OTP sent to WhatsApp +91 ' + adminMobile);
     } else {
-      authError.textContent = 'गलत पिन। सही सिक्योरिटी पिन दर्ज करें (Default: 908442)।';
-      adminPinInput.value = '';
-      adminPinInput.focus();
+      // Increment fail count
+      failCount++;
+      localStorage.setItem('kissan_admin_fails', String(failCount));
+      if (failCount >= 5) {
+        const lockTime = Date.now() + 15 * 60 * 1000;
+        localStorage.setItem('kissan_admin_lock_until', String(lockTime));
+        if (authError) authError.textContent = 'बहुत अधिक गलत प्रयास। 15 मिनट के लिए लॉक किया गया।';
+      } else {
+        if (authError) authError.textContent = `गलत पिन। ${5 - failCount} प्रयास शेष।`;
+      }
+      adminPinInput?.focus();
     }
   }
 
+  // Step 2: Verify OTP (only accepts the exact code sent to WhatsApp)
+  async function handleAdminOtpVerification() {
+    const enteredOtp = (adminOtpInput ? adminOtpInput.value : '').trim();
+    if (!enteredOtp || enteredOtp.length < 6) {
+      if (authError) authError.textContent = 'कृपया 6 अंकों का OTP दर्ज करें जो WhatsApp पर आया है।';
+      adminOtpInput?.focus();
+      return;
+    }
+
+    let otpValid = false;
+
+    // Primary check: match the generated OTP exactly
+    if (currentGeneratedOtp && enteredOtp === currentGeneratedOtp) {
+      otpValid = true;
+    }
+
+    // Secondary: backend OTP verification
+    if (!otpValid && window.KISSAN_API) {
+      try {
+        const res = await fetch(`${window.KISSAN_API.baseUrl}/auth/otp/verify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phoneOrId: 'admin_master', code: enteredOtp })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) otpValid = true;
+        }
+      } catch (e) { }
+    }
+
+    // Tertiary: local OTP engine
+    if (!otpValid && window.KISSAN_DB && window.KISSAN_DB.otp) {
+      try {
+        const v = window.KISSAN_DB.otp.verify('admin_master', enteredOtp);
+        if (v && v.success) otpValid = true;
+      } catch (e) { }
+    }
+
+    if (otpValid) {
+      unlockDashboardSuccess();
+    } else {
+      if (authError) authError.textContent = 'गलत OTP। WhatsApp पर प्राप्त 6 अंकों का कोड दर्ज करें।';
+      adminOtpInput?.focus();
+    }
+  }
+
+  // Button & Keyboard Listeners
   adminVerifyPinBtn?.addEventListener('click', (e) => {
     e.preventDefault();
     handleAdminPinVerification();
   });
 
+  resendOtpBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (authError) authError.textContent = '';
+    generateAndSendOtp();
+    showToast('New OTP sent to WhatsApp +91 ' + adminMobile);
+  });
+
+  adminBackToPinBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (authError) authError.textContent = '';
+    if (adminOtpStep) adminOtpStep.classList.add('hidden');
+    if (adminPinStep) adminPinStep.classList.remove('hidden');
+    if (authScreenDesc) authScreenDesc.textContent = 'Enter your Store Security PIN & 2-Factor OTP to access store management.';
+    adminPinInput?.focus();
+  });
+
+  loginForm?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (adminPinStep && !adminPinStep.classList.contains('hidden')) {
+      handleAdminPinVerification(false);
+    } else {
+      handleAdminOtpVerification();
+    }
+  });
+
   adminPinInput?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      handleAdminPinVerification();
+      handleAdminPinVerification(false);
     }
   });
 
-  adminBackToPinBtn?.addEventListener('click', () => {
-    authError.textContent = '';
-    adminOtpStep.classList.add('hidden');
-    adminPinStep.classList.remove('hidden');
-    adminPinInput.focus();
-  });
-
-  // Step 2: Form Submit (Verify 2FA OTP & Unlock Dashboard)
-  loginForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    // If still on PIN step, process PIN first
-    if (!adminPinStep.classList.contains('hidden')) {
-      handleAdminPinVerification();
-      return;
-    }
-
-    const enteredOtp = adminOtpInput.value.trim();
-    if (!enteredOtp) {
-      authError.textContent = 'कृपया 6 अंकों का ओटीपी दर्ज करें।';
-      adminOtpInput.focus();
-      return;
-    }
-
-    let otpValid = (enteredOtp === currentGeneratedOtp || enteredOtp === '123456');
-    if (!otpValid && window.KISSAN_DB && window.KISSAN_DB.otp) {
-      const v = window.KISSAN_DB.otp.verify('admin_master', enteredOtp);
-      otpValid = v.success;
-    }
-    if (!otpValid && enteredOtp.length === 6) {
-      otpValid = true; // Fallback acceptance for valid 6-digit input
-    }
-
-    if (otpValid) {
-      localStorage.setItem('kissan_admin_fails', '0');
-      localStorage.removeItem('kissan_admin_lock_until');
-      sessionStorage.setItem('kissan_admin_auth', 'true');
-      authError.textContent = '';
-      adminPinInput.value = '';
-      adminOtpInput.value = '';
-      adminOtpStep.classList.add('hidden');
-      adminPinStep.classList.remove('hidden');
-      checkAuth();
-      showToast('Admin 2FA verified successfully! Dashboard unlocked.');
-    } else {
-      authError.textContent = 'गलत 2FA OTP कोड। कृपया सही ओटीपी दर्ज करें या WhatsApp बटन दबाएं।';
-      adminOtpInput.focus();
+  adminOtpInput?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAdminOtpVerification();
     }
   });
 
-  logoutBtn.addEventListener('click', () => {
+  logoutBtn?.addEventListener('click', () => {
     sessionStorage.removeItem('kissan_admin_auth');
     clearTimeout(sessionTimeout);
     checkAuth();
-    showToast('Logged out securely.');
+    showToast('Logged out of Admin Portal.');
   });
 
   // Navigation Tab Switching
@@ -1032,7 +1146,7 @@ document.addEventListener('DOMContentLoaded', () => {
   invDiscount?.addEventListener('input', recalcInvoiceTotals);
   invPaidAmount?.addEventListener('input', recalcInvoiceTotals);
 
-  invoiceForm?.addEventListener('submit', (e) => {
+  invoiceForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const items = [];

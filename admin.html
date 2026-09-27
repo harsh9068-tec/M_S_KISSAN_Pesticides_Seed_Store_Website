@@ -1,14 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin & Master Database Portal | M/S KISSAN</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@700;800;900&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="admin.css" />
 </head>
+
 <body>
 
   <!-- AUTHENTICATION SCREEN -->
@@ -21,49 +25,78 @@
           <small>Admin & Master Database Portal</small>
         </div>
       </div>
-      <p class="auth-desc">Enter your Store Security PIN & 2-Factor OTP to access store management.</p>
-      
+      <p class="auth-desc" id="authScreenDesc">Enter your Security PIN. An OTP will be sent to the registered WhatsApp
+        number for verification.</p>
+
       <form id="loginForm" class="auth-form">
         <!-- Step 1: Security PIN -->
         <div id="adminPinStep">
           <div class="input-group">
             <label for="adminPinInput">Security PIN</label>
-            <input type="password" id="adminPinInput" maxlength="12" placeholder="Enter Security PIN (908442)" autocomplete="current-password" autofocus required />
+            <input type="password" id="adminPinInput" maxlength="12" placeholder="Enter your Security PIN"
+              autocomplete="current-password" autofocus required />
           </div>
-          <button type="button" id="adminVerifyPinBtn" class="btn btn-primary btn-full" style="margin-top:8px;">Next: 2FA Verification →</button>
+
+          <button type="button" id="adminVerifyPinBtn" class="btn btn-primary btn-full"
+            style="margin-top:10px; font-size:14.5px; padding:12px;">
+            Next: Send OTP to Mobile →
+          </button>
         </div>
 
-        <!-- Step 2: 2FA OTP -->
+        <!-- Step 2: 2FA OTP Screen -->
         <div id="adminOtpStep" class="hidden">
-          <div class="otp-banner-box" style="margin-bottom:14px; background:#edf7ec; padding:12px 14px; border-radius:12px; border:1px solid #c2e2be; display:flex; align-items:center; gap:10px;">
-            <span style="font-size:24px;">🔐</span>
+          <div class="otp-banner-box"
+            style="margin-bottom:12px; background:#edf7ec; padding:12px 14px; border-radius:12px; border:1px solid #c2e2be; display:flex; align-items:center; gap:10px;">
+            <span style="font-size:26px;">🔐</span>
             <div>
               <strong style="display:block; font-size:13px; color:var(--green);">2FA Security Code Sent</strong>
               <small style="display:block; font-size:11px; color:var(--muted);">Mr. Mahipal Singh (9760153116)</small>
             </div>
           </div>
 
-          <div class="input-group">
-            <label for="adminOtpInput">Enter 6-Digit Admin OTP</label>
-            <input type="text" id="adminOtpInput" maxlength="6" placeholder="• • • • • •" style="letter-spacing:6px; font-size:22px; text-align:center; font-weight:800;" autocomplete="one-time-code" />
+          <!-- OTP Sent Notification -->
+          <div id="otpSentBanner"
+            style="background:#edf7ec; border:1px solid #c2e2be; border-radius:12px; padding:12px 14px; margin-bottom:14px; display:flex; align-items:center; gap:10px;">
+            <span style="font-size:24px;">📱</span>
+            <div>
+              <strong style="display:block; font-size:13px; color:var(--green);">OTP Sent via WhatsApp</strong>
+              <small style="display:block; font-size:11px; color:var(--muted);">Check WhatsApp on +91 9760153116</small>
+            </div>
+            <a id="adminWaOtpLink" href="https://wa.me/919760153116" target="_blank" class="btn btn-whatsapp"
+              style="padding:6px 12px; font-size:12px; margin-left:auto; white-space:nowrap;">
+              💬 Open WhatsApp
+            </a>
           </div>
 
-          <button type="submit" id="adminUnlockBtn" class="btn btn-primary btn-full" style="margin-top:8px;">Unlock Dashboard →</button>
+          <div class="input-group">
+            <label for="adminOtpInput">Enter 6-Digit OTP (received on WhatsApp)</label>
+            <input type="text" id="adminOtpInput" maxlength="6" placeholder="Enter OTP from WhatsApp"
+              style="letter-spacing:4px; font-size:20px; text-align:center; font-weight:800;"
+              autocomplete="one-time-code" />
+          </div>
+
+          <button type="submit" id="adminUnlockBtn" class="btn btn-primary btn-full"
+            style="margin-top:10px; font-size:14.5px; padding:12px;">
+            🔓 Verify OTP & Unlock Dashboard →
+          </button>
 
           <div style="display:flex; gap:8px; align-items:center; justify-content:space-between; margin-top:12px;">
-            <a id="adminWaOtpLink" href="#" target="_blank" class="btn btn-whatsapp" style="padding:8px 14px; font-size:12px;">
-              💬 Get OTP on WhatsApp
-            </a>
-            <button type="button" id="adminBackToPinBtn" class="btn btn-outline" style="padding:8px 14px; font-size:12px;">
+            <button type="button" id="resendOtpBtn" class="btn btn-secondary"
+              style="padding:8px 12px; font-size:12px; flex:1;">
+              🔄 Resend OTP
+            </button>
+            <button type="button" id="adminBackToPinBtn" class="btn btn-outline"
+              style="padding:8px 12px; font-size:12px; flex:1;">
               ← Back to PIN
             </button>
           </div>
         </div>
 
-        <p id="authError" class="auth-error" style="margin-top:10px;"></p>
+        <p id="authError" class="auth-error"
+          style="margin-top:10px; font-weight:600; text-align:center; color:var(--danger);"></p>
       </form>
 
-      <div class="auth-footer">
+      <div class="auth-footer" style="margin-top:16px;">
         <a href="index.html">← Return to Public Website</a>
       </div>
     </div>
@@ -71,7 +104,7 @@
 
   <!-- ADMIN DASHBOARD (Hidden until authenticated) -->
   <div id="dashboardScreen" class="dashboard-screen hidden">
-    
+
     <!-- Top Header -->
     <header class="admin-header">
       <div class="admin-container header-inner">
@@ -93,11 +126,13 @@
         </div>
 
         <div class="header-actions">
-          <button type="button" id="settingsBtn" class="btn-settings-pill" aria-label="Settings" title="Store Settings & Theme">
+          <button type="button" id="settingsBtn" class="btn-settings-pill" aria-label="Settings"
+            title="Store Settings & Theme">
             <span class="settings-icon">⚙️</span>
             <span class="settings-label">Settings</span>
           </button>
-          <a href="farmer-portal.html" class="btn btn-outline" target="_blank" title="Open Farmer Passbook Portal">👨‍🌾 Farmer Portal</a>
+          <a href="farmer-portal.html" class="btn btn-outline" target="_blank" title="Open Farmer Passbook Portal">👨‍🌾
+            Farmer Portal</a>
           <a href="index.html" class="btn btn-outline" target="_blank" title="Preview live website">🌐 Live Store</a>
           <button id="changePinBtn" class="btn btn-outline">🔑 Change PIN</button>
           <button id="logoutBtn" class="btn btn-danger">🔒 Logout</button>
@@ -106,7 +141,8 @@
     </header>
 
     <!-- STORE SETTINGS MODAL (Theme & Shortcuts) -->
-    <div id="settingsModal" class="settings-modal hidden" role="dialog" aria-modal="true" aria-labelledby="settingsHeading">
+    <div id="settingsModal" class="settings-modal hidden" role="dialog" aria-modal="true"
+      aria-labelledby="settingsHeading">
       <div class="settings-modal-backdrop" id="closeSettingsBackdrop"></div>
       <div class="settings-card">
         <div class="settings-card-header">
@@ -175,15 +211,16 @@
 
     <!-- Main Content -->
     <main class="admin-container main-content">
-      
+
       <!-- ==================== TAB 1: PRODUCT CATALOG ==================== -->
       <section id="tabContentProducts" class="tab-content active">
-        
+
         <!-- Welcome & Stats Banner -->
         <div class="banner-section">
           <div class="banner-text">
             <h1>Product Inventory Manager</h1>
-            <p>Add, edit, and organize all authorized seeds, pesticides, and bio-nutrients displayed on your website.</p>
+            <p>Add, edit, and organize all authorized seeds, pesticides, and bio-nutrients displayed on your website.
+            </p>
           </div>
           <div class="banner-buttons">
             <button id="openAddModalBtn" class="btn btn-primary btn-lg">➕ Add New Product</button>
@@ -233,7 +270,8 @@
         <div class="management-toolbar">
           <div class="search-box">
             <span class="search-icon">🔍</span>
-            <input type="text" id="adminSearchInput" placeholder="Search by name, brand (Syngenta, DuPont, Agrico, etc.), crop, or problem..." />
+            <input type="text" id="adminSearchInput"
+              placeholder="Search by name, brand (Syngenta, DuPont, Agrico, etc.), crop, or problem..." />
           </div>
 
           <div class="filter-controls">
@@ -255,12 +293,14 @@
           </div>
 
           <div class="utility-actions">
-            <button id="exportJsonBtn" class="btn btn-secondary" title="Download backup of products">💾 Backup Data</button>
+            <button id="exportJsonBtn" class="btn btn-secondary" title="Download backup of products">💾 Backup
+              Data</button>
             <label class="btn btn-secondary upload-label" title="Restore products from backup JSON">
               📥 Import Data
               <input type="file" id="importJsonInput" accept=".json" style="display:none;" />
             </label>
-            <button id="resetDefaultsBtn" class="btn btn-outline" title="Restore factory products">🔄 Reset Defaults</button>
+            <button id="resetDefaultsBtn" class="btn btn-outline" title="Restore factory products">🔄 Reset
+              Defaults</button>
           </div>
         </div>
 
@@ -285,7 +325,7 @@
 
       <!-- ==================== TAB 2: FARMER DATABASE & KHATA ==================== -->
       <section id="tabContentFarmers" class="tab-content hidden">
-        
+
         <div class="banner-section">
           <div class="banner-text">
             <h1>🌾 Farmer Records & Khata Ledger</h1>
@@ -325,7 +365,8 @@
         <div class="management-toolbar">
           <div class="search-box">
             <span class="search-icon">🔍</span>
-            <input type="text" id="farmerSearchInput" placeholder="Search farmer by ID (e.g. KIS-1001), Name, Mobile, or Village..." />
+            <input type="text" id="farmerSearchInput"
+              placeholder="Search farmer by ID (e.g. KIS-1001), Name, Mobile, or Village..." />
           </div>
           <div class="utility-actions">
             <button id="exportFarmersJsonBtn" class="btn btn-secondary">💾 Backup Farmers DB</button>
@@ -352,7 +393,7 @@
 
       <!-- ==================== TAB 3: POS INVOICES & BILLING ==================== -->
       <section id="tabContentInvoices" class="tab-content hidden">
-        
+
         <div class="banner-section">
           <div class="banner-text">
             <h1>🧾 POS Invoices & Sales Register</h1>
@@ -399,7 +440,8 @@
         <div class="management-toolbar">
           <div class="search-box">
             <span class="search-icon">🔍</span>
-            <input type="text" id="invoiceSearchInput" placeholder="Search by Invoice # (e.g. INV-2026-001), Farmer Name, or Mobile..." />
+            <input type="text" id="invoiceSearchInput"
+              placeholder="Search by Invoice # (e.g. INV-2026-001), Farmer Name, or Mobile..." />
           </div>
           <div class="utility-actions">
             <button id="exportInvoicesCsvBtn" class="btn btn-secondary">📊 Export Invoices (Excel CSV)</button>
@@ -444,7 +486,7 @@
 
       <!-- ==================== TAB 4: SEARCH ANALYTICS & DEMAND ==================== -->
       <section id="tabContentAnalytics" class="tab-content hidden">
-        
+
         <div class="banner-section">
           <div class="banner-text">
             <h1>🔍 Store Search Analytics & Demand Trends</h1>
@@ -492,11 +534,12 @@
 
       <!-- ==================== TAB 5: MASTER DATABASE & BACKUP CENTER ==================== -->
       <section id="tabContentDatabase" class="tab-content hidden">
-        
+
         <div class="banner-section">
           <div class="banner-text">
             <h1>🗄️ Master Database Management & Backup Center</h1>
-            <p>Single control center for all 8 database collections, Excel CSV exports, and 1-click JSON backup/restore.</p>
+            <p>Single control center for all 8 database collections, Excel CSV exports, and 1-click JSON backup/restore.
+            </p>
           </div>
           <div class="banner-buttons">
             <button id="masterBackupJsonBtn" class="btn btn-primary btn-lg">💾 Download Master JSON Backup</button>
@@ -560,8 +603,9 @@
         <!-- Backup & Migration Actions -->
         <div class="db-actions-card">
           <h3>📦 Master Database Operations</h3>
-          <p>Export your full store records for accounting, or upload a previously saved backup file to restore everything.</p>
-          
+          <p>Export your full store records for accounting, or upload a previously saved backup file to restore
+            everything.</p>
+
           <div class="db-actions-row">
             <button id="btnExportFullDb" class="btn btn-primary">
               💾 1-Click Complete Database Backup (.JSON)
@@ -642,7 +686,8 @@
         <div class="invoice-items-section">
           <div class="section-title-row" style="margin-bottom:8px;">
             <h4>📦 Bill Items & Agrochemicals</h4>
-            <button type="button" id="addInvoiceRowBtn" class="btn btn-secondary" style="padding:6px 12px; font-size:12px;">➕ Add Item</button>
+            <button type="button" id="addInvoiceRowBtn" class="btn btn-secondary"
+              style="padding:6px 12px; font-size:12px;">➕ Add Item</button>
           </div>
 
           <div class="table-responsive">
@@ -681,7 +726,8 @@
 
           <div class="invoice-totals-box">
             <div><span>Subtotal:</span> <strong id="invSubtotalLabel">₹0</strong></div>
-            <div><span>Discount:</span> <input type="number" id="invDiscount" value="0" min="0" style="width:80px; padding:4px 8px; font-size:13px;" /></div>
+            <div><span>Discount:</span> <input type="number" id="invDiscount" value="0" min="0"
+                style="width:80px; padding:4px 8px; font-size:13px;" /></div>
             <div class="grand-total-row"><span>Grand Total:</span> <strong id="invGrandTotalLabel">₹0</strong></div>
             <div class="due-row"><span>Balance Due:</span> <strong id="invBalanceDueLabel">₹0</strong></div>
           </div>
@@ -769,7 +815,8 @@
 
           <div class="form-group">
             <label for="prodBrand">Brand / Manufacturer</label>
-            <input type="text" id="prodBrand" placeholder="e.g. Syngenta, DuPont, Agrico, Triveni, Coromandel, Safex, Samradhi" />
+            <input type="text" id="prodBrand"
+              placeholder="e.g. Syngenta, DuPont, Agrico, Triveni, Coromandel, Safex, Samradhi" />
           </div>
 
           <div class="form-group">
@@ -792,7 +839,8 @@
 
           <div class="form-group full-width">
             <label for="prodTarget">Target Pests / Diseases / Benefits *</label>
-            <textarea id="prodTarget" rows="2" required placeholder="e.g. Stem borer, leaf blast, powdery mildew, higher tillering, etc."></textarea>
+            <textarea id="prodTarget" rows="2" required
+              placeholder="e.g. Stem borer, leaf blast, powdery mildew, higher tillering, etc."></textarea>
           </div>
 
           <div class="form-group">
@@ -881,7 +929,8 @@
           </div>
           <div class="form-group full-width">
             <label for="farmerNotesInput">Advisory / Shop Notes</label>
-            <textarea id="farmerNotesInput" rows="2" placeholder="Special requirements, soil conditions, or crop advice history..."></textarea>
+            <textarea id="farmerNotesInput" rows="2"
+              placeholder="Special requirements, soil conditions, or crop advice history..."></textarea>
           </div>
         </div>
 
@@ -1015,15 +1064,81 @@
     </div>
   </div>
 
+  <!-- VIEW / PRINT POS INVOICE MODAL -->
+  <div id="invoiceViewModal" class="modal-backdrop hidden">
+    <div class="modal-card modal-sm" style="width:min(520px, 100%);">
+      <div class="modal-header">
+        <div>
+          <h2>🧾 POS Bill Receipt</h2>
+          <small id="rcptInvId" style="font-weight:700; color:var(--green);">INV-2026-001</small>
+        </div>
+        <button id="closeInvoiceViewModalBtn" class="close-btn">&times;</button>
+      </div>
+
+      <div style="padding:20px 24px;">
+        <div
+          style="background:#f7faf6; border:1px dashed var(--line); border-radius:12px; padding:14px; margin-bottom:16px;">
+          <div style="text-align:center; margin-bottom:10px;">
+            <strong style="font-size:16px; color:var(--green); display:block;">M/S KISSAN PESTICIDES & SEED
+              STORE</strong>
+            <small style="color:var(--muted);">Village Behra Sadat, Post Morna, Muzaffarnagar (U.P.)</small>
+            <div style="font-size:12px; color:var(--ink); margin-top:2px;">📞 9760153116 / 9897123456</div>
+          </div>
+          <hr style="border:none; border-top:1px dashed #d1e2cf; margin:8px 0;" />
+          <div style="display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:4px;">
+            <span><b>Date:</b> <span id="rcptDate"></span></span>
+            <span><b>Mode:</b> <span id="rcptMode">Cash</span></span>
+          </div>
+          <div style="font-size:12.5px;">
+            <b>Customer:</b> <span id="rcptName"></span> (<span id="rcptVillage"></span>)
+          </div>
+        </div>
+
+        <div style="margin-bottom:16px;">
+          <strong style="font-size:13px; color:var(--ink); display:block; margin-bottom:8px;">Purchased Items:</strong>
+          <div id="rcptItemsList"
+            style="display:flex; flex-direction:column; gap:6px; max-height:160px; overflow-y:auto;">
+            <!-- Items rendered dynamically -->
+          </div>
+        </div>
+
+        <div
+          style="background:#edf5eb; border-radius:10px; padding:12px 14px; display:flex; flex-direction:column; gap:4px; font-size:13px; margin-bottom:18px;">
+          <div style="display:flex; justify-content:space-between;">
+            <span>Grand Total:</span>
+            <strong id="rcptTotal" style="font-size:15px; color:var(--green);">₹0</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between;">
+            <span>Amount Paid:</span>
+            <span id="rcptPaid" style="font-weight:700;">₹0</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; color:var(--danger);">
+            <span>Balance Due:</span>
+            <strong id="rcptDue">₹0</strong>
+          </div>
+        </div>
+
+        <div class="modal-actions" style="display:flex; flex-direction:column; gap:8px;">
+          <button type="button" id="sendWaRcptBtn" class="btn btn-whatsapp btn-full">💬 Send Bill on WhatsApp</button>
+          <div style="display:flex; gap:8px;">
+            <button type="button" id="printRcptBtn" class="btn btn-primary" style="flex:1;">🖨️ Print Slip</button>
+            <button type="button" id="closeRcptBtn" class="btn btn-outline" style="flex:1;">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- TOAST NOTIFICATION CONTAINER -->
   <div id="toastContainer" class="toast-container"></div>
 
   <!-- Load Master DB and Admin Scripts -->
-  <script src="theme-manager.js?v=2.2"></script>
-  <script src="kissan-master-db.js?v=2.2"></script>
-  <script src="api-client.js?v=2.2"></script>
-  <script src="products-data.js?v=2.2"></script>
-  <script src="farmer-db.js?v=2.2"></script>
-  <script src="admin.js?v=2.2"></script>
+  <script src="theme-manager.js?v=3.5"></script>
+  <script src="kissan-master-db.js?v=3.5"></script>
+  <script src="api-client.js?v=3.5"></script>
+  <script src="products-data.js?v=3.5"></script>
+  <script src="farmer-db.js?v=3.5"></script>
+  <script src="admin.js?v=3.5"></script>
 </body>
+
 </html>
