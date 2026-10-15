@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -66,5 +67,13 @@ public class PaymentController {
     @GetMapping("/orders/farmer/{farmerId}")
     public ResponseEntity<List<PaymentOrder>> getOrdersByFarmer(@PathVariable String farmerId) {
         return ResponseEntity.ok(paymentService.getOrdersByFarmer(farmerId));
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException e) {
+        return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "message", e.getMessage() != null ? e.getMessage() : "Invalid input parameters"
+        ));
     }
 }

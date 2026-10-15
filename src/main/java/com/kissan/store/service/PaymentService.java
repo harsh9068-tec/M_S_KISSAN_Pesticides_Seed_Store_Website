@@ -6,6 +6,8 @@ import com.kissan.store.model.Invoice;
 import com.kissan.store.model.KhataTransaction;
 import com.kissan.store.model.PaymentOrder;
 import com.kissan.store.repository.PaymentOrderRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -16,6 +18,7 @@ import org.springframework.web.client.RestTemplate;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -23,6 +26,8 @@ import java.util.*;
 
 @Service
 public class PaymentService {
+
+    private static final Logger logger = LoggerFactory.getLogger(PaymentService.class);
 
     @Value("${razorpay.key.id:rzp_test_kissanstore}")
     private String keyId;
@@ -57,14 +62,21 @@ public class PaymentService {
     }
 
     /**
-     * Creates an order with Razorpay Gateway or in sandbox test mode.
+     * Creates an order with Razorpay Gateway or in resilient test mode.
      */
     @Transactional
     public Map<String, Object> createOrder(PaymentOrderRequest request) {
-        double amountInRupees = request.getAmount() != null ? request.getAmount() : 1.0;
+        if (request == null) {
+            throw new IllegalArgumentException("Payment order request cannot be null.");
+        }
+        Double amount = request.getAmount();
+        if (amount == null || amount <= 0 || Double.isNaN(amount) || Double.isInfinite(amount)) {
+            throw new IllegalArgumentException("Invalid order amount. Amount must be a positive number.");
+        }
+
+        double amountInRupees = Math.round(amount * 100.0) / 100.0;
         long amountInPaise = Math.round(amountInRupees * 100);
         String receiptId = "rcpt_" + System.currentTimeMillis();
-
         String generatedOrderId = null;
 
         // Try calling Razorpay official REST API if live or valid test credentials provided
@@ -88,27 +100,25 @@ public class PaymentService {
                     generatedOrderId = (String) response.getBody().get("id");
                 }
             } catch (Exception e) {
-                // Fallback to local compliant order generation if network or auth error
-                System.out.println("Razorpay API Notice: " + e.getMessage() + ". Using resilient order ID.");
+                logger.warn("Razorpay API external order call notice: {}. Using resilient order ID.", e.getMessage());
             }
         }
 
         if (generatedOrderId == null) {
-            // Generate standard compliant Razorpay order id format
             generatedOrderId = "order_" + UUID.randomUUID().toString().replace("-", "").substring(0, 14);
         }
 
         PaymentOrder paymentOrder = new PaymentOrder(
                 generatedOrderId,
-                request.getFarmerId(),
-                request.getFarmerName(),
-                request.getFarmerMobile(),
+                sanitize(request.getFarmerId(), 50),
+                sanitize(request.getFarmerName(), 100),
+                sanitize(request.getFarmerMobile(), 20),
                 amountInRupees,
-                request.getPurpose() != null ? request.getPurpose() : "PRODUCT_PURCHASE",
-                request.getProductDetails(),
+                request.getPurpose() != null ? sanitize(request.getPurpose(), 50) : "PRODUCT_PURCHASE",
+                sanitize(request.getProductDetails(), 1000),
                 receiptId
         );
-        paymentOrder.setNotes(request.getNotes());
+        paymentOrder.setNotes(sanitize(request.getNotes(), 500));
         paymentOrderRepository.save(paymentOrder);
 
         Map<String, Object> result = new HashMap<>();
@@ -123,39 +133,61 @@ public class PaymentService {
     }
 
     /**
-     * Verifies Razorpay HMAC-SHA256 signature and records payment in Khata/Invoicing.
+     * Verifies Razorpay HMAC-SHA256 signature and records payment idempotently.
      */
     @Transactional
     public Map<String, Object> verifyPayment(PaymentVerifyRequest verifyReq) {
         Map<String, Object> response = new HashMap<>();
+        if (verifyReq == null) {
+            response.put("success", false);
+            response.put("message", "Verification request cannot be null.");
+            return response;
+        }
+
         String orderId = verifyReq.getRazorpayOrderId();
         String paymentId = verifyReq.getRazorpayPaymentId();
         String signature = verifyReq.getRazorpaySignature();
 
-        boolean isValid = false;
-
-        // Check if demo/sandbox test signature
-        boolean isDemo = keyId.startsWith("rzp_test_") || keySecret.contains("demo");
-        if (isDemo && (signature == null || signature.isEmpty() || signature.startsWith("demo_sig_") || signature.startsWith("sim_"))) {
-            isValid = true;
-        } else if (signature != null && !signature.isEmpty()) {
-            isValid = verifyRazorpaySignature(orderId, paymentId, signature, keySecret);
+        if (orderId == null || orderId.trim().isEmpty()) {
+            response.put("success", false);
+            response.put("message", "Razorpay Order ID is required.");
+            return response;
         }
 
-        Optional<PaymentOrder> optOrder = paymentOrderRepository.findByOrderId(orderId);
+        Optional<PaymentOrder> optOrder = paymentOrderRepository.findByOrderId(orderId.trim());
         PaymentOrder order = optOrder.orElseGet(() -> {
             PaymentOrder newOrder = new PaymentOrder(
-                    orderId,
-                    verifyReq.getFarmerId(),
-                    verifyReq.getFarmerName(),
-                    verifyReq.getFarmerMobile(),
-                    verifyReq.getAmount() != null ? verifyReq.getAmount() : 0.0,
-                    verifyReq.getPurpose(),
-                    verifyReq.getProductDetails(),
+                    orderId.trim(),
+                    sanitize(verifyReq.getFarmerId(), 50),
+                    sanitize(verifyReq.getFarmerName(), 100),
+                    sanitize(verifyReq.getFarmerMobile(), 20),
+                    verifyReq.getAmount() != null && verifyReq.getAmount() > 0 ? verifyReq.getAmount() : 0.0,
+                    sanitize(verifyReq.getPurpose(), 50),
+                    sanitize(verifyReq.getProductDetails(), 1000),
                     "rcpt_" + System.currentTimeMillis()
             );
             return paymentOrderRepository.save(newOrder);
         });
+
+        // Idempotency guard: Prevent double-crediting or duplicate invoice creation
+        if ("SUCCESS".equalsIgnoreCase(order.getStatus())) {
+            response.put("success", true);
+            response.put("message", "Payment has already been verified and processed.");
+            response.put("orderId", order.getOrderId());
+            response.put("paymentId", order.getPaymentId());
+            response.put("amount", order.getAmount());
+            response.put("paidAt", order.getPaidAt());
+            return response;
+        }
+
+        boolean isValid = false;
+        boolean isDemo = keyId.startsWith("rzp_test_") || keySecret.contains("demo");
+
+        if (isDemo && (signature == null || signature.isEmpty() || signature.startsWith("demo_sig_") || signature.startsWith("sim_"))) {
+            isValid = true;
+        } else if (signature != null && !signature.isEmpty() && paymentId != null && !paymentId.isEmpty()) {
+            isValid = verifyRazorpaySignature(orderId, paymentId, signature, keySecret);
+        }
 
         if (!isValid) {
             order.setStatus("FAILED");
@@ -171,9 +203,9 @@ public class PaymentService {
         order.setPaymentId(paymentId != null ? paymentId : "pay_" + System.currentTimeMillis());
         order.setSignature(signature != null ? signature : "verified_sig_" + System.currentTimeMillis());
         order.setPaidAt(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-        if (verifyReq.getFarmerId() != null) order.setFarmerId(verifyReq.getFarmerId());
-        if (verifyReq.getFarmerName() != null) order.setFarmerName(verifyReq.getFarmerName());
-        if (verifyReq.getFarmerMobile() != null) order.setFarmerMobile(verifyReq.getFarmerMobile());
+        if (verifyReq.getFarmerId() != null) order.setFarmerId(sanitize(verifyReq.getFarmerId(), 50));
+        if (verifyReq.getFarmerName() != null) order.setFarmerName(sanitize(verifyReq.getFarmerName(), 100));
+        if (verifyReq.getFarmerMobile() != null) order.setFarmerMobile(sanitize(verifyReq.getFarmerMobile(), 20));
         paymentOrderRepository.save(order);
 
         // Apply business logic based on payment purpose
@@ -181,7 +213,6 @@ public class PaymentService {
         String createdInvoiceId = null;
 
         if ("KHATA_PAYMENT".equalsIgnoreCase(purpose) && order.getFarmerId() != null && !order.getFarmerId().isEmpty()) {
-            // Apply payment credit to Farmer's Khata
             try {
                 KhataTransaction tx = new KhataTransaction(
                         "tx_pay_" + System.currentTimeMillis(),
@@ -197,16 +228,15 @@ public class PaymentService {
                 );
                 farmerService.addKhataEntry(order.getFarmerId(), tx);
             } catch (Exception e) {
-                System.err.println("Error adding Khata entry: " + e.getMessage());
+                logger.error("Error crediting farmer Khata: {}", e.getMessage());
             }
         } else {
-            // Create a store invoice for product purchase
             try {
                 Invoice inv = new Invoice();
                 inv.setFarmerId(order.getFarmerId() != null ? order.getFarmerId() : "GUEST");
                 inv.setFarmerName(order.getFarmerName() != null ? order.getFarmerName() : "Online Customer");
                 inv.setFarmerMobile(order.getFarmerMobile() != null ? order.getFarmerMobile() : "N/A");
-                inv.setFarmerVillage(verifyReq.getFarmerVillage() != null ? verifyReq.getFarmerVillage() : "Online Order");
+                inv.setFarmerVillage(verifyReq.getFarmerVillage() != null ? sanitize(verifyReq.getFarmerVillage(), 100) : "Online Order");
                 inv.setGrandTotal(order.getAmount());
                 inv.setPaidAmount(order.getAmount());
                 inv.setBalanceDue(0.0);
@@ -215,9 +245,9 @@ public class PaymentService {
                 inv.setNotes("Online Tx ID: " + order.getPaymentId() + " | Item: " + (order.getProductDetails() != null ? order.getProductDetails() : "Seeds/Pesticides"));
 
                 Invoice savedInvoice = invoiceService.createInvoice(inv);
-                createdInvoiceId = savedInvoice.getId();
+                createdInvoiceId = savedInvoice != null ? savedInvoice.getId() : null;
             } catch (Exception e) {
-                System.err.println("Error creating invoice for online payment: " + e.getMessage());
+                logger.error("Error creating invoice for online payment: {}", e.getMessage());
             }
         }
 
@@ -236,28 +266,45 @@ public class PaymentService {
     }
 
     public List<PaymentOrder> getOrdersByFarmer(String farmerId) {
-        return paymentOrderRepository.findByFarmerIdOrderByCreatedAtDesc(farmerId);
+        if (farmerId == null || farmerId.trim().isEmpty()) {
+            return Collections.emptyList();
+        }
+        return paymentOrderRepository.findByFarmerIdOrderByCreatedAtDesc(farmerId.trim());
     }
 
     /**
-     * Native HMAC-SHA256 Razorpay signature calculation.
+     * Constant-time HMAC-SHA256 signature verification to prevent timing attacks.
      */
-    private boolean verifyRazorpaySignature(String orderId, String paymentId, String signature, String secret) {
+    public boolean verifyRazorpaySignature(String orderId, String paymentId, String signature, String secret) {
+        if (orderId == null || paymentId == null || signature == null || secret == null) {
+            return false;
+        }
         try {
             String data = orderId + "|" + paymentId;
             Mac sha256_HMAC = Mac.getInstance("HmacSHA256");
-            SecretKeySpec secret_key = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
-            sha256_HMAC.init(secret_key);
+            SecretKeySpec secretKey = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+            sha256_HMAC.init(secretKey);
             byte[] hash = sha256_HMAC.doFinal(data.getBytes(StandardCharsets.UTF_8));
+
             StringBuilder hexString = new StringBuilder();
             for (byte b : hash) {
-                String hex = Integer.toHexString(0xff & b);
-                if (hex.length() == 1) hexString.append('0');
-                hexString.append(hex);
+                hexString.append(String.format("%02x", b));
             }
-            return hexString.toString().equalsIgnoreCase(signature);
+
+            // Constant-time comparison
+            return MessageDigest.isEqual(
+                    hexString.toString().getBytes(StandardCharsets.UTF_8),
+                    signature.trim().toLowerCase().getBytes(StandardCharsets.UTF_8)
+            );
         } catch (Exception e) {
+            logger.error("Signature calculation exception: {}", e.getMessage());
             return false;
         }
+    }
+
+    private String sanitize(String input, int maxLength) {
+        if (input == null) return null;
+        String clean = input.trim();
+        return clean.length() > maxLength ? clean.substring(0, maxLength) : clean;
     }
 }
