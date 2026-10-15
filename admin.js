@@ -268,7 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loginForm?.addEventListener('submit', (e) => {
     e.preventDefault();
     if (adminPinStep && !adminPinStep.classList.contains('hidden')) {
-      handleAdminPinVerification(false);
+      handleAdminPinVerification();
     } else {
       handleAdminOtpVerification();
     }
@@ -277,7 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
   adminPinInput?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      handleAdminPinVerification(false);
+      handleAdminPinVerification();
     }
   });
 

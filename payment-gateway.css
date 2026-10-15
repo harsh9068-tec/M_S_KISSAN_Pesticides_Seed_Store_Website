@@ -1,0 +1,336 @@
+/* ==========================================================================
+   M/S KISSAN - PAYMENT GATEWAY MODAL & RECEIPT STYLES
+   Razorpay / UPI / Cards / Digital Receipt Design System
+   ========================================================================== */
+
+/* Payment Modal Overlay */
+.payment-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+  padding: 16px;
+}
+
+.payment-modal-overlay.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Payment Modal Card */
+.payment-modal-card {
+  background: #ffffff;
+  color: #0f172a;
+  border-radius: 18px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(226, 232, 240, 0.8);
+  animation: kissanModalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes kissanModalSlideUp {
+  from {
+    transform: translateY(20px) scale(0.97);
+  }
+  to {
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Header */
+.payment-modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8fafc;
+  border-radius: 18px 18px 0 0;
+}
+
+.gateway-icon-badge {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 800;
+  box-shadow: 0 4px 10px rgba(22, 163, 74, 0.3);
+}
+
+.payment-modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #64748b;
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: all 0.15s ease;
+}
+
+.payment-modal-close:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+/* Body */
+.payment-modal-body {
+  padding: 20px;
+}
+
+.payment-order-summary {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+}
+
+.pos-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: #475569;
+  margin-bottom: 6px;
+}
+
+.pos-row:last-child {
+  margin-bottom: 0;
+}
+
+/* Payment Methods */
+.payment-methods-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.pay-method-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #ffffff;
+}
+
+.pay-method-option:hover {
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+
+.pay-method-option.active {
+  border-color: #16a34a;
+  background: #f0fdf4;
+  box-shadow: 0 0 0 1px #16a34a;
+}
+
+.pay-method-option input[type="radio"] {
+  accent-color: #16a34a;
+  width: 18px;
+  height: 18px;
+}
+
+.method-info strong {
+  display: block;
+  font-size: 13px;
+  color: #0f172a;
+}
+
+.method-info small {
+  display: block;
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+/* UPI Preview Box */
+.payment-upi-qr-box {
+  background: #ffffff;
+  border: 1.5px dashed #bbf7d0;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 18px;
+}
+
+.upi-qr-preview {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.upi-id-pill {
+  display: inline-block;
+  background: #dcfce7;
+  color: #166534;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  margin-top: 6px;
+}
+
+/* Buttons */
+.btn-pay-now {
+  width: 100%;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.4);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-pay-now:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(22, 163, 74, 0.45);
+}
+
+.btn-pay-now:active {
+  transform: translateY(0);
+}
+
+/* Success Receipt */
+.receipt-card {
+  max-width: 440px;
+  padding: 24px;
+}
+
+.receipt-success-banner {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.success-tick-circle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #dcfce7;
+  color: #15803d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  font-weight: 900;
+  margin: 0 auto 10px;
+  box-shadow: 0 0 0 8px #f0fdf4;
+}
+
+.receipt-details-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.receipt-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: #475569;
+  padding: 6px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.receipt-row:last-child {
+  border-bottom: none;
+}
+
+.total-paid-row {
+  padding-top: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.receipt-actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* Spinner Loader */
+.payment-loader-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.85);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 100000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.payment-loader-overlay.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.payment-loader-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(255, 255, 255, 0.2);
+  border-top-color: #22c55e;
+  border-radius: 50%;
+  animation: kissanSpin 0.8s linear infinite;
+}
+
+@keyframes kissanSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Product Card Pay Online Button */
+.btn-pay-online {
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  color: #ffffff !important;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: 0 2px 6px rgba(22, 163, 74, 0.3);
+  transition: all 0.15s ease;
+  width: 100%;
+  margin-top: 6px;
+}
+
+.btn-pay-online:hover {
+  background: linear-gradient(135deg, #15803d, #166534);
+  box-shadow: 0 4px 10px rgba(22, 163, 74, 0.4);
+  transform: translateY(-1px);
+}

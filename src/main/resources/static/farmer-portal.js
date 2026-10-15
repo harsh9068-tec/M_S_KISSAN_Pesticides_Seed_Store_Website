@@ -309,6 +309,34 @@ document.addEventListener('DOMContentLoaded', () => {
     statTotalPurchases.textContent = `₹${totalPurchases.toLocaleString('en-IN')}`;
     statCurrentBalance.textContent = `₹${totalBal.toLocaleString('en-IN')}`;
 
+    // Online Khata Payment Gateway Integration
+    const payKhataOnlineBtn = document.getElementById('payKhataOnlineBtn');
+    if (payKhataOnlineBtn) {
+      if (totalBal <= 0) {
+        payKhataOnlineBtn.style.display = 'none';
+      } else {
+        payKhataOnlineBtn.style.display = 'inline-flex';
+        payKhataOnlineBtn.onclick = () => {
+          if (!window.KissanPaymentGateway) {
+            alert('पेमेंट गेटवे लोड हो रहा है, कृपया थोड़ी देर बाद पुनः प्रयास करें।');
+            return;
+          }
+          window.KissanPaymentGateway.startPayment({
+            amount: totalBal,
+            farmerId: farmer.id,
+            farmerName: farmer.name,
+            farmerMobile: farmer.mobile,
+            farmerVillage: farmer.village,
+            purpose: 'KHATA_PAYMENT',
+            productDetails: `खाता उधारी भुगतान (किसान: ${farmer.name})`,
+            onSuccess: async () => {
+              await checkFarmerAuth();
+            }
+          });
+        };
+      }
+    }
+
     // Direct WhatsApp consultation
     if (directWaBtn) {
       directWaBtn.onclick = () => {

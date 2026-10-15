@@ -172,7 +172,12 @@ document.addEventListener('DOMContentLoaded', () => {
       <p><b>${cropsLabel}</b> ${p.crops || (currentLang === 'hi' ? 'सभी मुख्य फसलें' : 'All seasonal crops')}</p>
       <p><b>${targetLabel}</b> ${p.target || (currentLang === 'hi' ? 'फसल सुरक्षा एवं पैदावार' : 'General crop protection')}</p>
       ${p.packSizes ? `<p><b>${packLabel}</b> ${p.packSizes}</p>` : ''}
-      <button class="enquire" data-product="${p.name}">${enquireBtnText}</button>
+      <div style="display:flex; flex-direction:column; gap:6px; margin-top:8px;">
+        <button class="enquire" data-product="${p.name}">${enquireBtnText}</button>
+        <button type="button" class="btn-pay-online buy-online-btn" data-product="${p.name}">
+          💳 ${currentLang === 'hi' ? 'ऑनलाइन खरीदें (Pay Online)' : 'Buy Now (Pay Online)'}
+        </button>
+      </div>
     `;
 
     // Bind WhatsApp Click
@@ -181,6 +186,38 @@ document.addEventListener('DOMContentLoaded', () => {
       const msgHi = `नमस्ते मैसर्स किसान स्टोर, मुझे "${p.name}" (फसल: ${p.crops || 'फसल'}) के बारे में जानकारी और रेट चाहिए। क्या यह उपलब्ध है?`;
       const message = currentLang === 'hi' ? msgHi : msgEn;
       window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`, '_blank');
+    });
+
+    // Bind Online Payment Gateway Checkout
+    card.querySelector('.buy-online-btn')?.addEventListener('click', () => {
+      if (!window.KissanPaymentGateway) {
+        alert(currentLang === 'hi' ? 'पेमेंट गेटवे लोड हो रहा है, कृपया प्रतीक्षा करें...' : 'Payment Gateway is initializing...');
+        return;
+      }
+
+      const farmerPrompt = currentLang === 'hi' ? 'कृपया अपना नाम दर्ज करें (Enter Your Name):' : 'Please enter your name:';
+      const mobilePrompt = currentLang === 'hi' ? 'कृपया 10-अंकों का मोबाइल नंबर दर्ज करें (Enter 10-digit Mobile):' : 'Please enter your 10-digit mobile number:';
+      
+      const name = prompt(farmerPrompt, 'सम्मानित किसान');
+      if (!name) return;
+
+      const mobile = prompt(mobilePrompt, '');
+      if (!mobile || mobile.replace(/\D/g, '').length < 10) {
+        alert(currentLang === 'hi' ? 'कृपया वैध 10-अंकों का मोबाइल नंबर दर्ज करें।' : 'Please enter a valid 10-digit mobile number.');
+        return;
+      }
+
+      // Default reasonable pricing if not set in catalog
+      const estimatedPrice = p.price || 480;
+
+      window.KissanPaymentGateway.startPayment({
+        amount: estimatedPrice,
+        farmerName: name.trim(),
+        farmerMobile: mobile.trim(),
+        purpose: 'PRODUCT_PURCHASE',
+        productDetails: `${p.name} (${p.brand || 'KISSAN Store'}) - 1 Pack`,
+        notes: `Online Order from Website: ${p.name}`
+      });
     });
 
     return card;
@@ -201,11 +238,11 @@ document.addEventListener('DOMContentLoaded', () => {
   searchInput?.addEventListener('input', () => {
     renderStoreProducts();
     const query = searchInput.value.trim();
-    if (query.length >= 2 && window.FarmerDB) {
+    if (query.length >= 2 && window.KISSAN_DB && window.KISSAN_DB.searchAnalytics) {
       clearTimeout(searchDebounceTimer);
       searchDebounceTimer = setTimeout(() => {
         const count = productGrid ? productGrid.querySelectorAll('.product-card').length : 0;
-        window.FarmerDB.logSearch(query, activeCategory, count);
+        window.KISSAN_DB.searchAnalytics.log(query, activeCategory, count);
       }, 700);
     }
   });
@@ -283,13 +320,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Log in Master Database AI Doctor scans collection
         if (window.KISSAN_DB) {
-          window.KISSAN_DB.aiDoctor.log({
-            ...currentAiDiagnosis,
-            source: 'Storefront AI Doctor'
-          });
-          window.KISSAN_DB.searchAnalytics.log(`[AI Doctor] ${currentAiDiagnosis.diseaseNameEn} (${currentAiDiagnosis.cropNameEn})`, currentAiDiagnosis.crop, 1);
-        } else if (window.FarmerDB) {
-          window.FarmerDB.logSearch(`[AI Doctor] ${currentAiDiagnosis.diseaseNameEn} (${currentAiDiagnosis.cropNameEn})`, currentAiDiagnosis.crop, 1);
+          if (window.KISSAN_DB.aiDoctor) {
+            window.KISSAN_DB.aiDoctor.log({
+              ...currentAiDiagnosis,
+              source: 'Storefront AI Doctor'
+            });
+          }
+          if (window.KISSAN_DB.searchAnalytics) {
+            window.KISSAN_DB.searchAnalytics.log(`[AI Doctor] ${currentAiDiagnosis.diseaseNameEn} (${currentAiDiagnosis.cropNameEn})`, currentAiDiagnosis.crop, 1);
+          }
         }
       }
 

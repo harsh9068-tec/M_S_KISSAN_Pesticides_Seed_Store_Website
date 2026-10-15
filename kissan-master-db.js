@@ -160,6 +160,21 @@
           }
         }
       } catch (e) {}
+    },
+
+    async syncPush(type, items) {
+      if (!window.KISSAN_API || !Array.isArray(items)) return;
+      try {
+        if (type === 'farmers') {
+          for (const f of items) {
+            await window.KISSAN_API.registerFarmer(f);
+          }
+        } else if (type === 'invoices') {
+          for (const inv of items) {
+            await window.KISSAN_API.createInvoice(inv);
+          }
+        }
+      } catch (e) {}
     }
   };
 

@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="farmer-portal.css" />
+  <link rel="stylesheet" href="payment-gateway.css" />
 </head>
 <body>
 
@@ -263,6 +264,9 @@
               <div class="khata-stat-box balance-box">
                 <small>वर्तमान शेष / उधारी (Balance)</small>
                 <strong id="statCurrentBalance">₹0</strong>
+                <button type="button" id="payKhataOnlineBtn" class="btn btn-pay-online" style="margin-top:8px;">
+                  💳 ऑनलाइन भुगतान करें (Pay Online)
+                </button>
               </div>
             </div>
           </div>
@@ -347,8 +351,8 @@
   <script src="kissan-master-db.js"></script>
   <script src="api-client.js"></script>
   <script src="products-data.js"></script>
-  <script src="farmer-db.js"></script>
   <script src="ai-doctor.js"></script>
+  <script src="payment-gateway.js"></script>
   <script src="farmer-portal.js"></script>
 </body>
 </html>
