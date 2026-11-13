@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -50,14 +51,25 @@ public class PaymentService {
     @Autowired
     private InvoiceService invoiceService;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private RestTemplate restTemplate;
+
+    public PaymentService() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(2500);
+        factory.setReadTimeout(3000);
+        this.restTemplate = new RestTemplate(factory);
+    }
+
+    public void setRestTemplate(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
 
     public Map<String, Object> getPaymentConfig() {
         Map<String, Object> config = new HashMap<>();
         config.put("keyId", keyId);
         config.put("currency", currency);
         config.put("companyName", companyName);
-        config.put("isTestMode", keyId.startsWith("rzp_test_") || keySecret.contains("demo"));
+        config.put("isTestMode", keyId.startsWith("rzp_test_") || keySecret.contains("demo") || keySecret.contains("test"));
         return config;
     }
 
@@ -79,8 +91,12 @@ public class PaymentService {
         String receiptId = "rcpt_" + System.currentTimeMillis();
         String generatedOrderId = null;
 
-        // Try calling Razorpay official REST API if live or valid test credentials provided
-        if (!keyId.contains("demo") && !keySecret.contains("demo") && keyId.startsWith("rzp_")) {
+        // Try calling Razorpay official REST API only if live production credentials provided (never in test/demo mode)
+        boolean isLiveProduction = keyId != null && keyId.startsWith("rzp_live_")
+                && !keyId.contains("demo") && !keyId.contains("test")
+                && keySecret != null && !keySecret.contains("demo") && !keySecret.contains("test");
+
+        if (isLiveProduction) {
             try {
                 String razorpayUrl = "https://api.razorpay.com/v1/orders";
                 HttpHeaders headers = new HttpHeaders();

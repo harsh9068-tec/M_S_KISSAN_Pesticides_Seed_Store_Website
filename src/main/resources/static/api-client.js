@@ -1,6 +1,6 @@
 // ============================================================================
 // M/S KISSAN PESTICIDES & SEED STORE - REST API CLIENT & SPRING BOOT BRIDGE
-// Multi-Device Full-Stack Real-Time Synchronizer
+// Multi-Device Full-Stack Real-Time Synchronizer & Security Token Carrier
 // ============================================================================
 
 (function (window) {
@@ -25,11 +25,29 @@
     isServerActive: false,
     baseUrl: getApiBase(),
 
+    getAdminToken() {
+      try {
+        return sessionStorage.getItem('kissan_admin_token') || '';
+      } catch (e) {
+        return '';
+      }
+    },
+
+    getHeaders(customHeaders = {}) {
+      const headers = { 'Content-Type': 'application/json', ...customHeaders };
+      const token = this.getAdminToken();
+      if (token) {
+        headers['X-Admin-Token'] = token;
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      return headers;
+    },
+
     async checkHealth() {
       try {
         const res = await fetch(`${this.baseUrl}/products`, {
           method: 'GET',
-          headers: { 'Accept': 'application/json' },
+          headers: this.getHeaders({ 'Accept': 'application/json' }),
           signal: AbortSignal.timeout ? AbortSignal.timeout(3000) : undefined
         });
         this.isServerActive = res.ok;
@@ -45,7 +63,9 @@
       try {
         const query = new URLSearchParams(params).toString();
         const url = `${this.baseUrl}/products${query ? '?' + query : ''}`;
-        const res = await fetch(url);
+        const res = await fetch(url, {
+          headers: this.getHeaders({ 'Accept': 'application/json' })
+        });
         if (res.ok) {
           const list = await res.json();
           if (Array.isArray(list) && list.length > 0 && window.KISSAN_DB && window.KISSAN_DB.products) {
@@ -65,7 +85,7 @@
 
         const res = await fetch(url, {
           method,
-          headers: { 'Content-Type': 'application/json' },
+          headers: this.getHeaders(),
           body: JSON.stringify(product)
         });
         if (res.ok) {
@@ -82,7 +102,8 @@
     async deleteProduct(id) {
       try {
         const res = await fetch(`${this.baseUrl}/products/${encodeURIComponent(id)}`, {
-          method: 'DELETE'
+          method: 'DELETE',
+          headers: this.getHeaders()
         });
         if (res.ok) {
           if (window.KISSAN_DB && window.KISSAN_DB.products) {
@@ -97,7 +118,9 @@
     // ==================== FARMERS REST APIS ====================
     async getFarmers() {
       try {
-        const res = await fetch(`${this.baseUrl}/farmers`);
+        const res = await fetch(`${this.baseUrl}/farmers`, {
+          headers: this.getHeaders({ 'Accept': 'application/json' })
+        });
         if (res.ok) {
           const list = await res.json();
           if (Array.isArray(list)) {
@@ -112,7 +135,9 @@
     async getFarmerByIdOrMobile(idOrMobile) {
       try {
         const clean = String(idOrMobile).trim();
-        const res = await fetch(`${this.baseUrl}/farmers/${encodeURIComponent(clean)}`);
+        const res = await fetch(`${this.baseUrl}/farmers/${encodeURIComponent(clean)}`, {
+          headers: this.getHeaders({ 'Accept': 'application/json' })
+        });
         if (res.ok) {
           return await res.json();
         }
@@ -124,7 +149,7 @@
       try {
         const res = await fetch(`${this.baseUrl}/farmers/register`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: this.getHeaders(),
           body: JSON.stringify(farmerData)
         });
         if (res.ok) {
@@ -142,7 +167,7 @@
       try {
         const res = await fetch(`${this.baseUrl}/farmers/${encodeURIComponent(id)}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: this.getHeaders(),
           body: JSON.stringify(farmerData)
         });
         if (res.ok) {
@@ -159,7 +184,8 @@
     async deleteFarmer(id) {
       try {
         const res = await fetch(`${this.baseUrl}/farmers/${encodeURIComponent(id)}`, {
-          method: 'DELETE'
+          method: 'DELETE',
+          headers: this.getHeaders()
         });
         if (res.ok) {
           if (window.KISSAN_DB && window.KISSAN_DB.farmers) {
@@ -175,7 +201,7 @@
       try {
         const res = await fetch(`${this.baseUrl}/farmers/${encodeURIComponent(farmerId)}/khata`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: this.getHeaders(),
           body: JSON.stringify(txData)
         });
         if (res.ok) {
@@ -193,7 +219,9 @@
     // ==================== INVOICES REST APIS ====================
     async getInvoices() {
       try {
-        const res = await fetch(`${this.baseUrl}/invoices`);
+        const res = await fetch(`${this.baseUrl}/invoices`, {
+          headers: this.getHeaders({ 'Accept': 'application/json' })
+        });
         if (res.ok) {
           const list = await res.json();
           if (Array.isArray(list)) {
@@ -209,7 +237,7 @@
       try {
         const res = await fetch(`${this.baseUrl}/invoices`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: this.getHeaders(),
           body: JSON.stringify(invoiceData)
         });
         if (res.ok) {
@@ -246,6 +274,47 @@
         if (res.ok) return await res.json();
       } catch (e) {}
       return window.KISSAN_DB && window.KISSAN_DB.otp ? window.KISSAN_DB.otp.verify(phoneOrId, code) : { success: false, message: 'Verification failed' };
+    },
+
+    // ==================== ADMIN 2FA AUTH APIS ====================
+    async verifyAdminPin(pin) {
+      try {
+        const res = await fetch(`${this.baseUrl}/auth/admin/verify-pin`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pin })
+        });
+        if (res.ok) return await res.json();
+      } catch (e) {}
+      return { success: false, message: 'Failed to verify PIN.' };
+    },
+
+    async verifyAdmin2FA(code) {
+      try {
+        const res = await fetch(`${this.baseUrl}/auth/admin/verify-2fa`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.token) {
+            try { sessionStorage.setItem('kissan_admin_token', data.token); } catch (e) {}
+          }
+          return data;
+        }
+      } catch (e) {}
+      return { success: false, message: '2FA verification failed.' };
+    },
+
+    async logoutAdmin() {
+      try {
+        await fetch(`${this.baseUrl}/auth/admin/logout`, {
+          method: 'POST',
+          headers: this.getHeaders()
+        });
+      } catch (e) {}
+      try { sessionStorage.removeItem('kissan_admin_token'); } catch (e) {}
     },
 
     // ==================== AI CROP DOCTOR REST API ====================

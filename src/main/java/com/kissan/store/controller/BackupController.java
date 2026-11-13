@@ -7,14 +7,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * REST Controller for Full Database Backup Export.
+ * Protected by AdminAuthInterceptor to prevent unauthorized data exfiltration.
+ */
 @RestController
 @RequestMapping("/api/v1/backup")
 @CrossOrigin(origins = "*")
@@ -38,13 +41,5 @@ public class BackupController {
         data.put("farmers", farmerService.getAllFarmers());
         data.put("invoices", invoiceService.getAllInvoices());
         return ResponseEntity.ok(data);
-    }
-
-    @PostMapping("/import-json")
-    public ResponseEntity<?> importDatabase(@RequestBody Map<String, Object> backupData) {
-        return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "Backup processed successfully."
-        ));
     }
 }

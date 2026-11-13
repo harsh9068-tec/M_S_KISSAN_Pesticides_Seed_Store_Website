@@ -34,7 +34,11 @@ document.addEventListener('DOMContentLoaded', () => {
     clearTimeout(sessionTimeout);
     if (!authScreen.classList.contains('hidden')) return;
     sessionTimeout = setTimeout(() => {
+      if (window.KISSAN_API && window.KISSAN_API.logoutAdmin) {
+        window.KISSAN_API.logoutAdmin();
+      }
       sessionStorage.removeItem('kissan_admin_auth');
+      sessionStorage.removeItem('kissan_admin_token');
       authScreen.classList.remove('hidden');
       dashboardScreen.classList.add('hidden');
       alert('Session expired due to 15 minutes of inactivity. Please enter PIN again.');
@@ -84,8 +88,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Generate OTP and send via WhatsApp
-  function generateAndSendOtp() {
-    // Generate cryptographically random 6-digit OTP
+  function generateAndSendOtp(serverOtp, serverWaUrl) {
+    if (serverOtp && serverWaUrl) {
+      currentGeneratedOtp = String(serverOtp);
+      if (adminWaOtpLink) adminWaOtpLink.href = serverWaUrl;
+      window.open(serverWaUrl, '_blank');
+      return currentGeneratedOtp;
+    }
+
+    // Fallback: Generate cryptographically random 6-digit OTP
     const array = new Uint32Array(1);
     crypto.getRandomValues(array);
     currentGeneratedOtp = String(100000 + (array[0] % 900000));
@@ -138,8 +149,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     let isCorrect = false;
+    let backendData = null;
 
-    // Primary: Backend PIN verification
+    // Primary: Backend PIN verification with 2FA OTP generation
     if (window.KISSAN_API) {
       try {
         const res = await fetch(`${window.KISSAN_API.baseUrl}/auth/admin/verify-pin`, {
@@ -149,7 +161,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         if (res.ok) {
           const data = await res.json();
-          if (data.success) isCorrect = true;
+          if (data.success) {
+            isCorrect = true;
+            backendData = data;
+          }
         }
       } catch (e) { }
     }
@@ -172,8 +187,12 @@ document.addEventListener('DOMContentLoaded', () => {
       localStorage.setItem('kissan_admin_fails', '0');
       localStorage.removeItem('kissan_admin_lock_until');
 
-      // Generate and SEND OTP privately via WhatsApp
-      generateAndSendOtp();
+      // Generate and SEND OTP privately via WhatsApp (using backend OTP if returned)
+      if (backendData && backendData.otp && backendData.whatsappUrl) {
+        generateAndSendOtp(backendData.otp, backendData.whatsappUrl);
+      } else {
+        generateAndSendOtp();
+      }
 
       // Transition to OTP step
       if (adminPinStep) adminPinStep.classList.add('hidden');
@@ -196,7 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Step 2: Verify OTP (only accepts the exact code sent to WhatsApp)
+  // Step 2: Verify OTP (authenticates with backend and issues Admin Session Token)
   async function handleAdminOtpVerification() {
     const enteredOtp = (adminOtpInput ? adminOtpInput.value : '').trim();
     if (!enteredOtp || enteredOtp.length < 6) {
@@ -207,12 +226,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let otpValid = false;
 
-    // Primary check: match the generated OTP exactly
-    if (currentGeneratedOtp && enteredOtp === currentGeneratedOtp) {
-      otpValid = true;
+    // Primary: Backend 2FA OTP verification & session token acquisition
+    if (window.KISSAN_API && window.KISSAN_API.verifyAdmin2FA) {
+      try {
+        const res = await window.KISSAN_API.verifyAdmin2FA(enteredOtp);
+        if (res && res.success) {
+          otpValid = true;
+        }
+      } catch (e) { }
     }
 
-    // Secondary: backend OTP verification
+    // Secondary: Direct backend verify endpoint
     if (!otpValid && window.KISSAN_API) {
       try {
         const res = await fetch(`${window.KISSAN_API.baseUrl}/auth/otp/verify`, {
@@ -227,7 +251,12 @@ document.addEventListener('DOMContentLoaded', () => {
       } catch (e) { }
     }
 
-    // Tertiary: local OTP engine
+    // Tertiary check: match the generated OTP
+    if (!otpValid && currentGeneratedOtp && enteredOtp === currentGeneratedOtp) {
+      otpValid = true;
+    }
+
+    // Quaternary: local OTP engine
     if (!otpValid && window.KISSAN_DB && window.KISSAN_DB.otp) {
       try {
         const v = window.KISSAN_DB.otp.verify('admin_master', enteredOtp);
@@ -289,7 +318,11 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   logoutBtn?.addEventListener('click', () => {
+    if (window.KISSAN_API && window.KISSAN_API.logoutAdmin) {
+      window.KISSAN_API.logoutAdmin();
+    }
     sessionStorage.removeItem('kissan_admin_auth');
+    sessionStorage.removeItem('kissan_admin_token');
     clearTimeout(sessionTimeout);
     checkAuth();
     showToast('Logged out of Admin Portal.');

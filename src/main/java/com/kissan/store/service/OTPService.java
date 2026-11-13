@@ -1,8 +1,11 @@
 package com.kissan.store.service;
 
 import org.springframework.stereotype.Service;
+
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.SecureRandom;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
@@ -26,12 +29,12 @@ public class OTPService {
     }
 
     private final Map<String, OTPRecord> activeOtps = new ConcurrentHashMap<>();
-    private final Random random = new Random();
+    private final SecureRandom secureRandom = new SecureRandom();
 
     public String generateOTP(String phoneOrId) {
         String clean = phoneOrId.trim().toLowerCase();
-        // Cryptographically random 6-digit OTP
-        String code = String.format("%06d", random.nextInt(900000) + 100000);
+        // Cryptographically secure 6-digit OTP using SecureRandom
+        String code = String.format("%06d", secureRandom.nextInt(900000) + 100000);
 
         long expiresAt = System.currentTimeMillis() + (5 * 60 * 1000); // 5 minutes
         activeOtps.put(clean, new OTPRecord(code, expiresAt));
@@ -56,7 +59,13 @@ public class OTPService {
             return false;
         }
 
-        if (record.getCode().equals(cleanCode)) {
+        // Constant-time comparison to prevent timing side-channel attacks
+        boolean matches = MessageDigest.isEqual(
+                record.getCode().getBytes(StandardCharsets.UTF_8),
+                cleanCode.getBytes(StandardCharsets.UTF_8)
+        );
+
+        if (matches) {
             activeOtps.remove(clean);
             return true;
         }
